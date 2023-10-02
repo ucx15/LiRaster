@@ -1,14 +1,18 @@
 #include <fstream>
 #include <assert.h>
-#include <time.h>
 #include <math.h>
+#include <time.h>
+#include "omp.h"
 
-
-#define STB_IMAGE_WRITE_IMPLEMENTATION
-#include "stb_image_write.h"
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wmissing-field-initializers"
+    #define STB_IMAGE_WRITE_IMPLEMENTATION
+    #include "stb_image_write.h"
+#pragma GCC diagnostic pop
 
 #include "surface.hpp"
 #include "utils.hpp" 
+
 
 
 #define ACES_a 0.0245786f
@@ -67,14 +71,18 @@ void Surface::tonemap() {
 }
 
 void Surface::toU32Surface(uint32_t *buffer) {
-    Color c;
+
+    uint8_t r;
+    uint8_t g;
+    uint8_t b;
+
+    #pragma omp simd
     for (int i=0; i<pixel_count; i++) {
-        c = m_data[i] * 0xFF;
-        buffer[i] = (uint32_t) (
-            ((uint8_t) c.r<<24) |
-            ((uint8_t) c.g<<16) |
-            ((uint8_t) c.b<< 8) |
-            0xFF);
+        r = m_data[i].r * 0xFF;
+        g = m_data[i].g * 0xFF;
+        b = m_data[i].b * 0xFF;
+
+        buffer[i] = (uint32_t) (r<<24) | (g<<16) | (b<< 8) | 0xFF;
     }
 }
 
