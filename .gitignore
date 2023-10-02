@@ -1,0 +1,6 @@
+Obj/*.o
+Out/*png
+
+*.exe
+
+buildlocal.ps1
