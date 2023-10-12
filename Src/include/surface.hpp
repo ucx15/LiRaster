@@ -42,18 +42,27 @@ class Surface {
 		void fill(const Color &color);
 		void fill_random();
 		
+
 		void drawRect(int x0, int y0, int w, int h, const Color &color, int thickness);
+		void drawRect(const Vec3 &pos_vec, const Vec3 &size_vec, const Color &color, int thickness);
 		void drawRect(const Rect &rect, const Color &color, int thickness);
+
 		void fillRect(int x0, int y0, int w, int h, const Color &color);
+		void fillRect(const Vec3 &pos_vec, const Vec3 &size_vec, const Color &color);
 		void fillRect(const Rect &rect, const Color &color);
 
+
 		void drawTris(int x0, int y0, int x1, int y1, int x2, int y2, const Color &color, int thickness);
+		void drawTris(const Vec3 &v1,const Vec3 &v2, const Vec3 &v3, const Color &color, int thickness);
 		void drawTris(const Tris &tris, const Color &color, int thickness);
-		
+
 		void fillTris(int x0, int y0, int x1, int y1, int x2, int y2, const Color &color);
+		void fillTris(const Vec3 &v1, const Vec3 &v2, const Vec3 &v3, const Color &color);
 		void fillTris(const Tris &tris, const Color &color);
 
+
 		void drawLine(int x0, int y0, int x1, int y1, const Color &color, int lineWidth);
+		void drawLine(const Vec3 &v1, const Vec3 &v2, const Color &color, int lineWidth);
 		void drawLine(const Line &line, const Color &color, int lineWidth);
 
 

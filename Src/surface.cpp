@@ -169,15 +169,20 @@ void Surface::fill_random() {
 
 
 void Surface::drawRect(int x0, int y0, int w, int h, const Color &color, int thickness) {
-    this->drawLine(x0, y0, x0+w, y0, color, thickness);   
-    this->drawLine(x0, y0+h, x0+w, y0+h, color, thickness);   
-    this->drawLine(x0, y0, x0, y0+h, color, thickness);   
-    this->drawLine(x0+w, y0, x0+w, y0+h, color, thickness);   
+    this->drawLine(x0, y0, x0+w, y0, color, thickness);
+    this->drawLine(x0, y0+h, x0+w, y0+h, color, thickness);
+    this->drawLine(x0, y0, x0, y0+h, color, thickness);
+    this->drawLine(x0+w, y0, x0+w, y0+h, color, thickness);
+}
+
+void Surface::drawRect(const Vec3 &pos_vec, const Vec3 &size_vec, const Color &color, int thickness) {
+    this->drawRect(pos_vec.x, pos_vec.y, size_vec.x, size_vec.y, color, thickness);
 }
 
 void Surface::drawRect(const Rect &rect, const Color &color, int thickness) {
     this->drawRect(rect.x, rect.y, rect.w, rect.h, color, thickness);
 }
+
 
 void Surface::fillRect(int x0, int y0, int w, int h, const Color &color) {
     x0 = std::max(0, x0);
@@ -192,6 +197,10 @@ void Surface::fillRect(int x0, int y0, int w, int h, const Color &color) {
     }
 }
 
+void Surface::fillRect(const Vec3 &pos_vec, const Vec3 &size_vec, const Color &color) {
+    this->fillRect(pos_vec.x, pos_vec.y, size_vec.x, size_vec.y, color);
+}
+
 void Surface::fillRect(const Rect &rect, const Color &color) {
     this->fillRect(rect.x, rect.y, rect.w, rect.h, color);
 }
@@ -204,9 +213,14 @@ void Surface::drawTris(int x0, int y0, int x1, int y1, int x2, int y2, const Col
     this->drawLine(x0, y0, x2, y2,  color, thickness);
 }
 
+void Surface::drawTris(const Vec3 &v1, const Vec3 &v2, const Vec3 &v3, const Color &color, int thickness) {
+    this->drawTris(v1.x,  v1.y,  v2.x,  v2.y,  v3.x, v3.y, color, thickness);
+}
+
 void Surface::drawTris(const Tris &tris, const Color &color, int thickness) {
     this->drawTris( tris.x0, tris.y0, tris.x1, tris.y1, tris.x2, tris.y2, color, thickness);    
 }
+
 
 void Surface::fillTris(int x0, int y0, int x1, int y1, int x2, int y2, const Color &color) {
     if (y0 > y1) { std::swap(x0, x1); std::swap(y0, y1); }
@@ -225,6 +239,10 @@ void Surface::fillTris(int x0, int y0, int x1, int y1, int x2, int y2, const Col
         for (int x = startX1; x <= endX1; x++)
             this->set_at(x, y, color);
     }
+}
+
+void Surface::fillTris(const Vec3 &v1, const Vec3 &v2, const Vec3 &v3, const Color &color) {
+    this->fillTris(v1.x,  v1.y,  v2.x,  v2.y,  v3.x, v3.y, color);
 }
 
 void Surface::fillTris(const Tris &tris, const Color &color) {
@@ -274,6 +292,10 @@ void Surface::drawLine(int x0, int y0, int x1, int y1, const Color &color, int l
         y0 -= sx;
         y1 -= sx;
     }
+}
+
+void Surface::drawLine(const Vec3 &v1, const Vec3 &v2, const Color &color, int lineWidth) {
+    this->drawLine(v1.x, v1.y, v2.x, v2.y, color, lineWidth);
 }
 
 void Surface::drawLine(const Line &line, const Color &color, int lineWidth) {
