@@ -18,10 +18,10 @@ class Engine {
 		SDL_Texture* sdl_texture = NULL;
 		SDL_Event event;
 
-		Surface _surface;
-		Color* _buffer;  // Array of pixels
-
 		bool isRunning;
+
+		Surface surface;
+		Color* buffer;  // Array of pixels
 
 	public:
 		// Constructors and Destructors
@@ -31,11 +31,9 @@ class Engine {
 		// Methods
 		void setup();
 		void quit();
+		void handleEvents();
 
 		void render();
-		
-		void handleEvents();
-		void rasterize();
 
 		int pipeline();
 };

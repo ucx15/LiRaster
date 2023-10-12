@@ -1,6 +1,7 @@
 Obj/*.o
 Out/*png
 Libs/SDL2
+.versions
 
 *.exe
 

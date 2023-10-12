@@ -7,8 +7,8 @@
 #include "settings.hpp"
 #include "utils.hpp"
 
-using namespace std::chrono;
 
+using namespace std::chrono;
 
 #define TIME_PT high_resolution_clock::now()
 #define TIME_CAST_US(b, a) duration_cast<microseconds>(b - a)
@@ -48,16 +48,16 @@ void Engine::setup() {
 	}
 
 
-	_buffer = new Color[W*H];
+	buffer = new Color[W*H];
 
-	_surface = Surface(_buffer, W, H);
+	surface = Surface(buffer, W, H);
 	isRunning = true;
 }
 
 
 void Engine::quit() {
 	// Cleanup
-	delete[] _buffer;
+	delete[] buffer;
 
 	SDL_DestroyRenderer(sdl_renderer);
 	SDL_DestroyWindow(sdl_window);
@@ -75,9 +75,30 @@ void Engine::handleEvents() {
 }
 
 
-void Engine::rasterize() {
+// Main Render Method
+void Engine::render() {
+
+	// Normal Space to Screen Space conversion
+
+
+
+	// Rendering 
+	surface.fill(COLOR_BLACK);
+	
+	surface.fillRect(20, 20, 100, 60, COLOR_RED);
+	int LineWidth = 1;
+	surface.drawLine(W/2 + 30, H/2 + 30, W/2 + 30 + 60, H/2 + 30, COLOR_WHITE, LineWidth);
+	surface.drawLine(W/2 + 30, H/2 + 30, W/2 + 30, H/2 + 60 + 30, COLOR_WHITE, LineWidth);
+	surface.drawLine(W/2 - 60, H/2 - 60, W/2 +30 + 60, H/2 + 60 + 30, COLOR_WHITE, LineWidth);
+	surface.drawLine(W/2 + 60, H/2 - 60, W/2 - 30 - 60, H/2 + 60 + 30, COLOR_WHITE, LineWidth);
+
+	surface.drawTris(W/2, H/2, W/2 - 30, H/2 + 60, W/2 + 30, H/2 + 60, COLOR_GREEN, LineWidth);
+	surface.fillTris(W/2 + 100, H/2, W/2 - 30 + 100, H/2 + 60, W/2 + 30 + 100, H/2 + 60, COLOR_BLUE);
+
+
+	// Copying data to SDL Surface
 	SDL_LockSurface(sdl_surface);
-		_surface.toU32Surface((uint32_t*)sdl_surface->pixels);
+		surface.toU32Surface((uint32_t*)sdl_surface->pixels);
 	SDL_UnlockSurface(sdl_surface);
 
 	sdl_texture = SDL_CreateTextureFromSurface(sdl_renderer, sdl_surface);
@@ -94,61 +115,34 @@ void Engine::rasterize() {
 }
 
 
-// Main Render Method
-void Engine::render() {
-	_surface.fill(COLOR_BLACK);
-	
-	_surface.fillRect(20, 20, 100, 60, COLOR_RED);
-	int LW = 1;
-	_surface.drawLine(W/2 + 30, H/2 + 30, W/2 + 30 + 60, H/2 + 30, COLOR_WHITE, LW);
-	_surface.drawLine(W/2 + 30, H/2 + 30, W/2 + 30, H/2 + 60 + 30, COLOR_WHITE, LW);
-	_surface.drawLine(W/2 - 60, H/2 - 60, W/2 +30 + 60, H/2 + 60 + 30, COLOR_WHITE, LW);
-	_surface.drawLine(W/2 + 60, H/2 - 60, W/2 - 30 - 60, H/2 + 60 + 30, COLOR_WHITE, LW);
-
-	_surface.drawTris(W/2, H/2, W/2 - 30, H/2 + 60, W/2 + 30, H/2 + 60, COLOR_GREEN, LW);
-	_surface.fillTris(W/2 + 100, H/2, W/2 - 30 + 100, H/2 + 60, W/2 + 30 + 100, H/2 + 60, COLOR_BLUE);
-}
-
-
 // Methods
 int Engine::pipeline() {
 
-	high_resolution_clock::time_point t1;
-	high_resolution_clock::time_point t2;
-
-	high_resolution_clock::time_point t3;
-	high_resolution_clock::time_point t4;
-
-	high_resolution_clock::time_point t5;
-
-
-
-	t1 = TIME_PT;
-	this->render();
-	t2 = TIME_PT;
-
-	this->rasterize();
-	t3 = TIME_PT;
+	high_resolution_clock::time_point t1, t2, t3, t4;
 
 	while (isRunning) {
 		this->handleEvents();
 
+		t1 = TIME_PT;
+		this->render();
+		t2 = TIME_PT;
+
+
+		// Logs all the timings
+		uint64_t t_render_us = TIME_CAST_US(t2, t1).count();
+
+		std::cout << "\trender\t " << t_render_us / 1000.f << " ms\n";
 	}
 
+
 	// Save the Surface
+	t3 = TIME_PT;
+	surface.save_png("Out/img.png");
 	t4 = TIME_PT;
-	_surface.save_png("Out/img.png");
-	t5 = TIME_PT;
 
 
-	// Logs all the timings
-	uint64_t t_render_us = TIME_CAST_US(t2, t1).count();
-	uint64_t t_raster_us = TIME_CAST_US(t3, t2).count();
-	uint64_t t_save_us   = TIME_CAST_US(t5, t4).count();
-
-	std::cout << "Timers:\n";
-	std::cout << "\trender\t " << t_render_us / 1000.f << " ms\n";
-	std::cout << "\traster\t " << t_raster_us / 1000.f << " ms\n";
+	uint64_t t_save_us   = TIME_CAST_US(t4, t3).count();
 	std::cout << "\tsave\t " << t_save_us / 1000.f << " ms\n";
+
 	return 0;
 }
