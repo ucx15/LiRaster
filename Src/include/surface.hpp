@@ -4,6 +4,7 @@
 #include "line.hpp"
 #include "tris.hpp"
 #include "rect.hpp"
+#include "circle.hpp"
 
 
 class Surface {
@@ -42,6 +43,15 @@ class Surface {
 		void fill(const Color &color);
 		void fill_random();
 		
+
+		void drawCircle(int x0, int y0, int r, const Color &color, int thickness);
+		void drawCircle(const Vec3 &pos_vec, int r, const Color &color, int thickness);
+		void drawCircle(const Circle &cirlce, const Color &color, int thickness);
+
+		void fillCircle(int x0, int y0, int r, const Color &color);
+		void fillCircle(const Vec3 &pos_vec, int r, const Color &color);
+		void fillCircle(const Circle &cirlce, const Color &color);
+
 
 		void drawRect(int x0, int y0, int w, int h, const Color &color, int thickness);
 		void drawRect(const Vec3 &pos_vec, const Vec3 &size_vec, const Color &color, int thickness);

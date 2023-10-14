@@ -1,4 +1,5 @@
 #include <fstream>
+#include <iostream>
 #include <assert.h>
 #include <math.h>
 #include <time.h>
@@ -168,6 +169,70 @@ void Surface::fill_random() {
 
 
 
+// Cicles
+void Surface::drawCircle(int x0, int y0, int r, const Color &color, int thickness) {
+    if ( (r < 1) || (thickness < 1) ) {
+        return;
+    }
+
+    int y_st = std::max(0, std::min( height, y0 - r));
+    int y_en = std::max(0, std::min( height, y0+r+1 ));
+    int x_st = std::max(0, std::min( width,  x0 - r));
+    int x_en = std::max(0, std::min( width,  x0+r+1 ));
+
+    int r_sq = r*r;
+    int rt_sq = (r-thickness)*(r-thickness);
+
+    int d_sq;
+
+    for (int y=y_st; y<y_en; y++) {
+        for (int x=x_st; x<x_en; x++) {
+
+            d_sq = (x-x0)*(x-x0) + (y-y0)*(y-y0);
+            if ( (d_sq > rt_sq)  && (d_sq < r_sq) ) {
+                m_data[(y) * width + (x)] = color;
+            }
+
+        }
+    }
+
+}
+
+void Surface::drawCircle(const Vec3 &pos_vec, int r, const Color &color, int thickness) {
+    this->drawCircle(pos_vec.x, pos_vec.y, r, color, thickness);
+}
+
+void Surface::drawCircle(const Circle &circle, const Color &color, int thickness) {
+    this->drawCircle(circle.x, circle.y, circle.r, color, thickness);
+}
+
+
+void Surface::fillCircle(int x0, int y0, int r, const Color &color) {
+    int x_st = x0 - r;
+    int y_st = y0 - r;
+    int x_en = x0 + r;
+    int y_en = y0 + r;
+    
+    for (int y=y_st; y<y_en; y++) {
+        for (int x=x_st; x<x_en; x++) {
+            if ( ((x-x0)*(x-x0) + (y-y0)*(y-y0)) < (r*r) ) {
+                m_data[y*width + x] = color;
+            }
+        }
+    }
+
+}
+
+void Surface::fillCircle(const Vec3 &pos_vec, int r, const Color &color) {
+    this->fillCircle(pos_vec.x, pos_vec.y, r, color);
+}
+
+void Surface::fillCircle(const Circle &circle, const Color &color) {
+    this->fillCircle(circle.x, circle.y, circle.r, color);
+}
+
+
+// Rectangles
 void Surface::drawRect(int x0, int y0, int w, int h, const Color &color, int thickness) {
     this->drawLine(x0, y0, x0+w, y0, color, thickness);
     this->drawLine(x0, y0+h, x0+w, y0+h, color, thickness);
@@ -206,7 +271,7 @@ void Surface::fillRect(const Rect &rect, const Color &color) {
 }
 
 
-
+// Triangles
 void Surface::drawTris(int x0, int y0, int x1, int y1, int x2, int y2, const Color &color, int thickness) {
     this->drawLine(x0, y0, x1, y1,  color, thickness);
     this->drawLine(x1, y1, x2, y2,  color, thickness);
@@ -250,7 +315,7 @@ void Surface::fillTris(const Tris &tris, const Color &color) {
 }
 
 
-
+// Lines
 void Surface::drawLine(int x0, int y0, int x1, int y1, const Color &color, int lineWidth) {
     int dx = abs(x1 - x0);
     int dy = abs(y1 - y0);

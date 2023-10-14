@@ -104,19 +104,8 @@ void Engine::render() {
 	}
 		
 	for (int i=0; i<3; i++) {
-		surface.fillRect(ss_points[i].x, ss_points[i].y, 10, 10, COLOR_RED);
+		surface.fillCircle(ss_points[i], 5, COLOR_RED);
 	}
-
-
-	// surface.fillRect(20, 20, 100, 60, COLOR_RED);
-	// int LineWidth = 1;
-	// surface.drawLine(W/2 + 30, H/2 + 30, W/2 + 30 + 60, H/2 + 30, COLOR_WHITE, LineWidth);
-	// surface.drawLine(W/2 + 30, H/2 + 30, W/2 + 30, H/2 + 60 + 30, COLOR_WHITE, LineWidth);
-	// surface.drawLine(W/2 - 60, H/2 - 60, W/2 +30 + 60, H/2 + 60 + 30, COLOR_WHITE, LineWidth);
-	// surface.drawLine(W/2 + 60, H/2 - 60, W/2 - 30 - 60, H/2 + 60 + 30, COLOR_WHITE, LineWidth);
-
-	// surface.drawTris(W/2, H/2, W/2 - 30, H/2 + 60, W/2 + 30, H/2 + 60, COLOR_GREEN, LineWidth);
-	// surface.fillTris(W/2 + 100, H/2, W/2 - 30 + 100, H/2 + 60, W/2 + 30 + 100, H/2 + 60, COLOR_BLUE);
 
 
 	// Copying data to SDL Surface
@@ -147,9 +136,9 @@ int Engine::pipeline() {
 	ss_points = new Vec3[3];
 	tris = new int[3 * 1];
 
-	points[0] = Vec3( 0, .5, 0);
-	points[1] = Vec3( .5, 0, 0);
-	points[2] = Vec3(-.5, 0, 0);
+	points[0] = Vec3(  0,  .5, 0);
+	points[1] = Vec3( .5, -.5, 0);
+	points[2] = Vec3(-.5, -.5, 0);
 
 	tris[0] = 0;
 	tris[1] = 1;
