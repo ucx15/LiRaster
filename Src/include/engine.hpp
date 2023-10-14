@@ -23,6 +23,10 @@ class Engine {
 		Surface surface;
 		Color* buffer;  // Array of pixels
 
+		Vec3* points;
+		Vec3* ss_points;
+		int* tris;
+
 	public:
 		// Constructors and Destructors
 		Engine();

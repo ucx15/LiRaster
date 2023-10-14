@@ -79,21 +79,44 @@ void Engine::handleEvents() {
 void Engine::render() {
 
 	// Normal Space to Screen Space conversion
+	Vec3 point;
 
+
+	for (int i=0; i<3; i++) {
+		point = points[i];
+		// (-1, 1)  -- x2 ->  (0, 2)  -- /2 ->  (0, 1)  -- xS ->  (0, S)
+		ss_points[i] = Vec3( W*(1+point.x)/2, H*(1-point.y)/2, 0 );
+	}
 
 
 	// Rendering 
 	surface.fill(COLOR_BLACK);
-	
-	surface.fillRect(20, 20, 100, 60, COLOR_RED);
-	int LineWidth = 1;
-	surface.drawLine(W/2 + 30, H/2 + 30, W/2 + 30 + 60, H/2 + 30, COLOR_WHITE, LineWidth);
-	surface.drawLine(W/2 + 30, H/2 + 30, W/2 + 30, H/2 + 60 + 30, COLOR_WHITE, LineWidth);
-	surface.drawLine(W/2 - 60, H/2 - 60, W/2 +30 + 60, H/2 + 60 + 30, COLOR_WHITE, LineWidth);
-	surface.drawLine(W/2 + 60, H/2 - 60, W/2 - 30 - 60, H/2 + 60 + 30, COLOR_WHITE, LineWidth);
 
-	surface.drawTris(W/2, H/2, W/2 - 30, H/2 + 60, W/2 + 30, H/2 + 60, COLOR_GREEN, LineWidth);
-	surface.fillTris(W/2 + 100, H/2, W/2 - 30 + 100, H/2 + 60, W/2 + 30 + 100, H/2 + 60, COLOR_BLUE);
+	Vec3 a,b,c;
+	for (int i=0; i<3; i+=3) {
+		a = ss_points[ tris[i]   ];
+		b = ss_points[ tris[i+1] ];
+		c = ss_points[ tris[i+2] ];
+
+		surface.drawLine(a, b, COLOR_WHITE, 1);
+		surface.drawLine(b, c, COLOR_WHITE, 1);
+		surface.drawLine(a, c, COLOR_WHITE, 1);
+	}
+		
+	for (int i=0; i<3; i++) {
+		surface.fillRect(ss_points[i].x, ss_points[i].y, 10, 10, COLOR_RED);
+	}
+
+
+	// surface.fillRect(20, 20, 100, 60, COLOR_RED);
+	// int LineWidth = 1;
+	// surface.drawLine(W/2 + 30, H/2 + 30, W/2 + 30 + 60, H/2 + 30, COLOR_WHITE, LineWidth);
+	// surface.drawLine(W/2 + 30, H/2 + 30, W/2 + 30, H/2 + 60 + 30, COLOR_WHITE, LineWidth);
+	// surface.drawLine(W/2 - 60, H/2 - 60, W/2 +30 + 60, H/2 + 60 + 30, COLOR_WHITE, LineWidth);
+	// surface.drawLine(W/2 + 60, H/2 - 60, W/2 - 30 - 60, H/2 + 60 + 30, COLOR_WHITE, LineWidth);
+
+	// surface.drawTris(W/2, H/2, W/2 - 30, H/2 + 60, W/2 + 30, H/2 + 60, COLOR_GREEN, LineWidth);
+	// surface.fillTris(W/2 + 100, H/2, W/2 - 30 + 100, H/2 + 60, W/2 + 30 + 100, H/2 + 60, COLOR_BLUE);
 
 
 	// Copying data to SDL Surface
@@ -119,6 +142,19 @@ void Engine::render() {
 int Engine::pipeline() {
 
 	high_resolution_clock::time_point t1, t2, t3, t4;
+	
+	points = new Vec3[3];
+	ss_points = new Vec3[3];
+	tris = new int[3 * 1];
+
+	points[0] = Vec3( 0, .5, 0);
+	points[1] = Vec3( .5, 0, 0);
+	points[2] = Vec3(-.5, 0, 0);
+
+	tris[0] = 0;
+	tris[1] = 1;
+	tris[2] = 2;
+
 
 	while (isRunning) {
 		this->handleEvents();
@@ -134,12 +170,14 @@ int Engine::pipeline() {
 		std::cout << "\trender\t " << t_render_us / 1000.f << " ms\n";
 	}
 
-
 	// Save the Surface
 	t3 = TIME_PT;
 	surface.save_png("Out/img.png");
 	t4 = TIME_PT;
 
+	delete[] points;
+	delete[] ss_points;
+	delete[] tris;
 
 	uint64_t t_save_us   = TIME_CAST_US(t4, t3).count();
 	std::cout << "\tsave\t " << t_save_us / 1000.f << " ms\n";
