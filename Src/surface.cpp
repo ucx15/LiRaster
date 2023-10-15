@@ -1,9 +1,8 @@
 #include <fstream>
 #include <iostream>
-#include <assert.h>
 #include <math.h>
 #include <time.h>
-#include "omp.h"
+
 
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wmissing-field-initializers"
@@ -77,7 +76,6 @@ void Surface::toU32Surface(uint32_t *buffer) {
     uint8_t g;
     uint8_t b;
 
-    #pragma omp simd
     for (int i=0; i<pixel_count; i++) {
         r = m_data[i].r * 0xFF;
         g = m_data[i].g * 0xFF;

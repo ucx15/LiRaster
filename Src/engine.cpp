@@ -75,21 +75,19 @@ void Engine::handleEvents() {
 }
 
 
-// Main Render Method
-void Engine::render() {
-
+void Engine::project() {
 	// Normal Space to Screen Space conversion
-	Vec3 point;
-
-
 	for (int i=0; i<3; i++) {
-		point = points[i];
+		Vec3 &point = points[i];
 		// (-1, 1)  -- x2 ->  (0, 2)  -- /2 ->  (0, 1)  -- xS ->  (0, S)
 		ss_points[i] = Vec3( W*(1+point.x)/2, H*(1-point.y)/2, 0 );
 	}
+}
 
 
-	// Rendering 
+// Main Render Method
+void Engine::rasterize() {
+	// Rendering Triangles from ss_points buffer
 	surface.fill(COLOR_BLACK);
 
 	Vec3 a,b,c;
@@ -106,22 +104,26 @@ void Engine::render() {
 	for (int i=0; i<3; i++) {
 		surface.fillCircle(ss_points[i], 5, COLOR_RED);
 	}
+}
 
 
+void Engine::render() {
 	// Copying data to SDL Surface
 	SDL_LockSurface(sdl_surface);
 		surface.toU32Surface((uint32_t*)sdl_surface->pixels);
 	SDL_UnlockSurface(sdl_surface);
 
-	sdl_texture = SDL_CreateTextureFromSurface(sdl_renderer, sdl_surface);
-	if (sdl_texture == NULL) {
-		SDL_Log("SDL_CreateTextureFromSurface failed: %s", SDL_GetError());
-		return;
-	}
 
-	SDL_RenderClear(sdl_renderer);
-	SDL_RenderCopy(sdl_renderer, sdl_texture, NULL, NULL);
-	SDL_RenderPresent(sdl_renderer);
+	sdl_texture = SDL_CreateTextureFromSurface(sdl_renderer, sdl_surface);
+		
+		if (sdl_texture == NULL) {
+			SDL_Log("SDL_CreateTextureFromSurface failed: %s", SDL_GetError());
+			return;
+		}
+
+		SDL_RenderClear(sdl_renderer);
+		SDL_RenderCopy(sdl_renderer, sdl_texture, NULL, NULL);
+		SDL_RenderPresent(sdl_renderer);
 
 	SDL_DestroyTexture(sdl_texture);
 }
@@ -130,8 +132,7 @@ void Engine::render() {
 // Methods
 int Engine::pipeline() {
 
-	high_resolution_clock::time_point t1, t2, t3, t4;
-	
+	// Scene Setup	
 	points = new Vec3[3];
 	ss_points = new Vec3[3];
 	tris = new int[3 * 1];
@@ -145,31 +146,52 @@ int Engine::pipeline() {
 	tris[2] = 2;
 
 
+	high_resolution_clock::time_point t1, t2, t3, t_loop_st, t_loop_en, t5, t6;
+
+	// Main Loop
+	frame_count = 1;
+
+	t1 = TIME_PT;
+	this->project();
+
+	t2 = TIME_PT;
+	this->rasterize();
+	t3 = TIME_PT;
+
+	uint64_t t_project_us = TIME_CAST_US(t2, t1).count();
+	uint64_t t_raster_us  = TIME_CAST_US(t3, t2).count();
+
+	std::cout << "Project\t " << t_project_us << " us\tRaster\t " << t_raster_us << " us\n\n";
+	
+
 	while (isRunning) {
 		this->handleEvents();
 
-		t1 = TIME_PT;
-		this->render();
-		t2 = TIME_PT;
+		t_loop_st = TIME_PT;
+			this->render();
+		t_loop_en = TIME_PT;
 
+		frame_count++;
 
 		// Logs all the timings
-		uint64_t t_render_us = TIME_CAST_US(t2, t1).count();
+		if ( !(frame_count % (FPS/2)) ) {
+			uint64_t t_render_us  = TIME_CAST_US(t_loop_en, t_loop_st).count();
 
-		std::cout << "\trender\t " << t_render_us / 1000.f << " ms\n";
+			std::cout << "\tRender\t " << t_render_us / 1000.f << " ms\n";
+		}
 	}
 
 	// Save the Surface
-	t3 = TIME_PT;
+	t5 = TIME_PT;
 	surface.save_png("Out/img.png");
-	t4 = TIME_PT;
+	t6 = TIME_PT;
 
 	delete[] points;
 	delete[] ss_points;
 	delete[] tris;
 
-	uint64_t t_save_us   = TIME_CAST_US(t4, t3).count();
-	std::cout << "\tsave\t " << t_save_us / 1000.f << " ms\n";
+	uint64_t t_save_us   = TIME_CAST_US(t6, t5).count();
+	std::cout << "\nSave\t " << t_save_us / 1000.f << " ms\n";
 
 	return 0;
 }

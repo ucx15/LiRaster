@@ -19,6 +19,7 @@ class Engine {
 		SDL_Event event;
 
 		bool isRunning;
+		uint64_t frame_count;
 
 		Surface surface;
 		Color* buffer;  // Array of pixels
@@ -27,17 +28,19 @@ class Engine {
 		Vec3* ss_points;
 		int* tris;
 
+
 	public:
-		// Constructors and Destructors
 		Engine();
 		~Engine();
+		int pipeline();
 
-		// Methods
+	private:
 		void setup();
 		void quit();
 		void handleEvents();
 
+		void project();
 		void render();
+		void rasterize();
 
-		int pipeline();
 };

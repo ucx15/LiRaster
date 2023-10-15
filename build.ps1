@@ -6,7 +6,7 @@
 
 
 # -------- BUILD SETTINGS --------
-$C_FLAGS = "-Wall", "-Wextra", "-pedantic", "-std=c++20", "-s", "-O3", "-fopenmp"
+$C_FLAGS = "-Wall", "-Wextra", "-pedantic", "-std=c++20", "-s", "-O3"
 
 $out_file = "LiRaster.exe"
 $main_files = "Src/main.cpp"
