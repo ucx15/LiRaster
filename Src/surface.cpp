@@ -152,10 +152,12 @@ void Surface::set_at(int x, int y, const Color &color) {
 }
 
 
+// Base
 void Surface::fill(const Color &color) {
-	for (int i=0; i<pixel_count; ++i) {
-		m_data[i] = color;
-	}
+    std::fill(&m_data[0], &m_data[pixel_count], color);
+	// for (int i=0; i<pixel_count; ++i) {
+	// 	m_data[i] = color;
+	// }
 }
 
 void Surface::fill_random() {
@@ -206,10 +208,14 @@ void Surface::drawCircle(const Circle &circle, const Color &color, int thickness
 
 
 void Surface::fillCircle(int x0, int y0, int r, const Color &color) {
-    int x_st = x0 - r;
-    int y_st = y0 - r;
-    int x_en = x0 + r;
-    int y_en = y0 + r;
+        if ( r < 1 ) {
+        return;
+    }
+
+    int y_st = std::max(0, std::min( height, y0 - r));
+    int y_en = std::max(0, std::min( height, y0+r+1 ));
+    int x_st = std::max(0, std::min( width,  x0 - r));
+    int x_en = std::max(0, std::min( width,  x0+r+1 ));
     
     for (int y=y_st; y<y_en; y++) {
         for (int x=x_st; x<x_en; x++) {

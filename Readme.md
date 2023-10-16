@@ -18,4 +18,5 @@ $ ./LiRaster
 ```
 
 ## ShowCase
+![draw_quad.png](Out/Progress/draw_quad.png)
 ![showcase1.png](Out/Progress/showcase_1.png)

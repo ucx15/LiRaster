@@ -1,5 +1,6 @@
 # pragma once
 
+#include <chrono>
 #include <cstdint>
 
 #include "color.hpp"
@@ -48,4 +49,17 @@ Color rand_color();
 struct pcg_random_t{
 	uint64_t state = 100;
 	uint64_t inc = 100;
+};
+
+
+
+class ScopedTimer {
+	private:
+		std::chrono::high_resolution_clock::time_point t_pt1, t_pt2;
+		const char * _msg;
+
+	public:
+		ScopedTimer();
+		ScopedTimer(const char * msg);
+		~ScopedTimer();
 };

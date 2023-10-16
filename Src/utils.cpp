@@ -54,3 +54,23 @@ Vec3 rand_vec3_on_sphere(Vec3 normal) {
 Color rand_color() {
 	return Color(randf, randf, randf);
 }
+
+
+
+// Timer
+
+ScopedTimer::ScopedTimer() {
+	t_pt1 = std::chrono::high_resolution_clock::now();
+	_msg = "";
+}
+
+ScopedTimer::ScopedTimer(const char * msg) {
+	t_pt1 = std::chrono::high_resolution_clock::now();
+	_msg = msg;
+}
+
+ScopedTimer::~ScopedTimer() {
+	t_pt2 = std::chrono::high_resolution_clock::now();
+	auto duration = std::chrono::duration_cast<std::chrono::microseconds>(t_pt2 - t_pt1).count();
+	std::cout << _msg << duration/1000.f << "ms\n";
+}

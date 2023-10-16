@@ -6,6 +6,7 @@ const float EPSILON  = 1E-8F;    // Near clip
 
 const int W = 640;
 const int H = 480;
+constexpr float ASR = (float) W/H;
 
 const int FPS = 240;
 

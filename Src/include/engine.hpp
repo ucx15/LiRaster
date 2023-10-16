@@ -28,6 +28,9 @@ class Engine {
 		Vec3* ss_points;
 		int* tris;
 
+		int n_points;
+		int n_tris;
+
 
 	public:
 		Engine();

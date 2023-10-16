@@ -57,6 +57,10 @@ void Engine::setup() {
 
 void Engine::quit() {
 	// Cleanup
+	delete[] points;
+	delete[] ss_points;
+	delete[] tris;
+
 	delete[] buffer;
 
 	SDL_DestroyRenderer(sdl_renderer);
@@ -77,10 +81,10 @@ void Engine::handleEvents() {
 
 void Engine::project() {
 	// Normal Space to Screen Space conversion
-	for (int i=0; i<3; i++) {
+	for (int i=0; i<n_points; i++) {
 		Vec3 &point = points[i];
 		// (-1, 1)  -- x2 ->  (0, 2)  -- /2 ->  (0, 1)  -- xS ->  (0, S)
-		ss_points[i] = Vec3( W*(1+point.x)/2, H*(1-point.y)/2, 0 );
+		ss_points[i] = Vec3( W*(1.f + point.x/ASR) / 2.f , H*(1.f-point.y)/2.f, 0 );
 	}
 }
 
@@ -91,19 +95,22 @@ void Engine::rasterize() {
 	surface.fill(COLOR_BLACK);
 
 	Vec3 a,b,c;
-	for (int i=0; i<3; i+=3) {
+	for (int i=0; i<n_tris*3; i+=3) {
 		a = ss_points[ tris[i]   ];
 		b = ss_points[ tris[i+1] ];
 		c = ss_points[ tris[i+2] ];
+		
+		// surface.fillTris(a, b, c, COLOR_GREEN);
 
 		surface.drawLine(a, b, COLOR_WHITE, 1);
 		surface.drawLine(b, c, COLOR_WHITE, 1);
 		surface.drawLine(a, c, COLOR_WHITE, 1);
 	}
-		
-	for (int i=0; i<3; i++) {
-		surface.fillCircle(ss_points[i], 5, COLOR_RED);
+
+	for (int i=0; i<n_points; i++) {
+		surface.fillCircle(ss_points[i], 4, COLOR_RED);
 	}
+
 }
 
 
@@ -132,25 +139,32 @@ void Engine::render() {
 // Methods
 int Engine::pipeline() {
 
-	// Scene Setup	
-	points = new Vec3[3];
-	ss_points = new Vec3[3];
-	tris = new int[3 * 1];
+	n_points = 4;
+	n_tris   = 2;
 
-	points[0] = Vec3(  0,  .5, 0);
-	points[1] = Vec3( .5, -.5, 0);
-	points[2] = Vec3(-.5, -.5, 0);
+	points    = new Vec3[n_points];
+	ss_points = new Vec3[n_points];
+	tris      = new int[3*n_tris];
+
+	// Scene Setup
+	points[0] = Vec3( -.25, .25, 0);
+	points[1] = Vec3( -.25, -.25, 0);
+	points[2] = Vec3( +.25, -.25, 0);
+	points[3] = Vec3( +.25, .25, 0);
 
 	tris[0] = 0;
 	tris[1] = 1;
 	tris[2] = 2;
 
+	tris[3] = 0;
+	tris[4] = 2;
+	tris[5] = 3;
+
 
 	high_resolution_clock::time_point t1, t2, t3, t_loop_st, t_loop_en, t5, t6;
 
 	// Main Loop
-	frame_count = 1;
-
+	frame_count = 1;	
 	t1 = TIME_PT;
 	this->project();
 
@@ -161,8 +175,8 @@ int Engine::pipeline() {
 	uint64_t t_project_us = TIME_CAST_US(t2, t1).count();
 	uint64_t t_raster_us  = TIME_CAST_US(t3, t2).count();
 
-	std::cout << "Project\t " << t_project_us << " us\tRaster\t " << t_raster_us << " us\n\n";
-	
+	std::cout << "Project\t " << t_project_us << " us\tRaster\t " << t_raster_us << " us\n";
+
 
 	while (isRunning) {
 		this->handleEvents();
@@ -186,9 +200,6 @@ int Engine::pipeline() {
 	surface.save_png("Out/img.png");
 	t6 = TIME_PT;
 
-	delete[] points;
-	delete[] ss_points;
-	delete[] tris;
 
 	uint64_t t_save_us   = TIME_CAST_US(t6, t5).count();
 	std::cout << "\nSave\t " << t_save_us / 1000.f << " ms\n";
