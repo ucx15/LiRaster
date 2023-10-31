@@ -12,7 +12,6 @@ $out_file = "LiRaster.exe"
 $main_files = "Src/main.cpp"
 
 $src_files =  "engine","vec", "color", "utils", "surface"
-# $src_files = "engine"
 
 
 $include_dir = "Src/Include/"
@@ -43,13 +42,21 @@ foreach ($file in $src_files) {
 
 	if ($file) {
 		if ("Src/${file}.cpp" -notin $main_files) {
-			Write-Output "    ${file}.cpp"
 
-			if (Test-Path "Obj/${file}.o") {
-				Remove-Item Obj/${file}.o
+			$sourceModifiedDate = (Get-Item "Src/${file}.cpp").LastWriteTime
+			$targetModifiedDate = (Get-Item "Obj/${file}.o").LastWriteTime
+
+			if ($sourceModifiedDate -gt $targetModifiedDate) {
+				Write-Output "    ${file}.cpp"
+
+				if (Test-Path "Obj/${file}.o") {
+					Remove-Item Obj/${file}.o
+				}
+
+				g++ $C_FLAGS  -I $include_dir -I $stb_inc_dir -I $sdl_inc_dir -L $sdl_lib_dir $sdl_linkables -o Obj/${file}.o -c Src/${file}.cpp
 			}
 
-			g++ $C_FLAGS  -I $include_dir -I $stb_inc_dir -I $sdl_inc_dir -L $sdl_lib_dir $sdl_linkables -o Obj/${file}.o -c Src/${file}.cpp
+
 		}
 	}
 }
