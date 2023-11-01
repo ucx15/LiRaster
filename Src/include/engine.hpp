@@ -31,6 +31,7 @@ class Engine {
 		int n_points;
 		int n_tris;
 
+		float ProjectionMatrix[4][4] = {0.f};
 
 	public:
 		Engine();
@@ -42,6 +43,7 @@ class Engine {
 		void quit();
 		void handleEvents();
 
+		void renderSetup();
 		void project();
 		void render();
 		void rasterize();

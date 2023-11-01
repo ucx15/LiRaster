@@ -2,7 +2,8 @@
 
 
 const float FAR_CLIP = 1E8F;  // Far clip
-const float EPSILON  = 1E-8F;    // Near clip
+const float EPSILON  = 1E-8F; // Near clip
+const float AOV = 45;         // Angle of View
 
 const int W = 640;
 const int H = 480;

@@ -148,7 +148,10 @@ int Surface::save_png(const char* file_name) {
 
 // Drawing Methods
 void Surface::set_at(int x, int y, const Color &color) {
-    m_data[y*width + x] = color;
+    int idx = y*width + x;
+    if (idx < pixel_count) {
+        m_data[idx] = color;
+    }
 }
 
 
@@ -292,21 +295,34 @@ void Surface::drawTris(const Tris &tris, const Color &color, int thickness) {
 
 
 void Surface::fillTris(int x0, int y0, int x1, int y1, int x2, int y2, const Color &color) {
+    if ((x0 == x1 && y0 == y1) || (x0 == x2 && y0 == y2) || (x1 == x2 && y1 == y2)) {
+        return;
+    }
+
+    // ScanLine Approach
     if (y0 > y1) { std::swap(x0, x1); std::swap(y0, y1); }
     if (y0 > y2) { std::swap(x0, x2); std::swap(y0, y2); }
     if (y1 > y2) { std::swap(x1, x2); std::swap(y1, y2); }
 
-    int dx01 = x1 - x0, dy01 = y1 - y0, dx02 = x2 - x0, dy02 = y2 - y0;
-    int slope1 = (dy01 != 0) ? (dx01 << 16) / dy01 : 0, slope2 = (dy02 != 0) ? (dx02 << 16) / dy02 : 0;
+    float invslope1 = (x1 - x0) / static_cast<float>(y1 - y0);
+    float invslope2 = (x2 - x0) / static_cast<float>(y2 - y0);
 
-    for (int y = y0; y <= y2; y++) {
-        int startX1 = x0 + ((y - y0) * slope1 >> 16);
-        int endX1 = x0 + ((y - y0) * slope2 >> 16);
+    float curx1 = x0;
+    float curx2 = x0;
 
-        if (startX1 > endX1) std::swap(startX1, endX1);
+    for (int y = y0; y < y1; y++) {
+        this->drawLine(static_cast<int>(curx1), y, static_cast<int>(curx2), y, color, 1);
+        curx1 += invslope1;
+        curx2 += invslope2;
+    }
 
-        for (int x = startX1; x <= endX1; x++)
-            this->set_at(x, y, color);
+    invslope1 = (x2 - x1) / static_cast<float>(y2 - y1);
+    curx1 = x1;
+
+    for (int y = y1; y <= y2; y++) {
+        this->drawLine(static_cast<int>(curx1), y, static_cast<int>(curx2), y, color, 1);
+        curx1 += invslope1;
+        curx2 += invslope2;
     }
 }
 

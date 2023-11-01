@@ -55,11 +55,11 @@ struct pcg_random_t{
 
 class ScopedTimer {
 	private:
-		std::chrono::high_resolution_clock::time_point t_pt1, t_pt2;
+		std::chrono::steady_clock::time_point t_pt1, t_pt2;
 		const char * _msg;
+		bool isSuffix;
 
 	public:
-		ScopedTimer();
-		ScopedTimer(const char * msg);
+		ScopedTimer(const char * msg, bool showUnits);
 		~ScopedTimer();
 };

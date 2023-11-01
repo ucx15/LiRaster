@@ -58,19 +58,20 @@ Color rand_color() {
 
 
 // Timer
-
-ScopedTimer::ScopedTimer() {
-	t_pt1 = std::chrono::high_resolution_clock::now();
-	_msg = "";
-}
-
-ScopedTimer::ScopedTimer(const char * msg) {
-	t_pt1 = std::chrono::high_resolution_clock::now();
+ScopedTimer::ScopedTimer(const char * msg, bool showUnits) {
+	t_pt1 = std::chrono::steady_clock::now();
 	_msg = msg;
+	isSuffix = showUnits;
 }
 
 ScopedTimer::~ScopedTimer() {
-	t_pt2 = std::chrono::high_resolution_clock::now();
+	t_pt2 = std::chrono::steady_clock::now();
 	auto duration = std::chrono::duration_cast<std::chrono::microseconds>(t_pt2 - t_pt1).count();
-	std::cout << _msg << duration/1000.f << "ms\n";
+
+	if(isSuffix) {
+		std::cout << _msg << duration << "us\n";
+	}
+	else {
+		std::cout << duration << '\n';
+	}
 }

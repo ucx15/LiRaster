@@ -6,12 +6,15 @@
 
 
 # -------- BUILD SETTINGS --------
-$C_FLAGS = "-Wall", "-Wextra", "-pedantic", "-std=c++20", "-s", "-O3"
+$C_FLAGS = "-Wall", "-Wextra", "-pedantic", "-std=c++20"
 
 $out_file = "LiRaster.exe"
 $main_files = "Src/main.cpp"
 
 $src_files =  "engine","vec", "color", "utils", "surface"
+
+$buildAll = $false
+$buildDebug = $true
 
 
 $include_dir = "Src/Include/"
@@ -25,6 +28,14 @@ $sdl_linkables = "-lmingw32", "-lSDL2main", "-lSDL2"
 
 
 # -------- BUILD SCRIPT --------
+
+# Specifying a Debug or Release Build 
+if ($buildDebug) {
+	$C_FLAGS += "-g3", "-ggdb"	
+} else {
+	$C_FLAGS += "-s", "-O3"
+}
+
 if (!(Test-Path("./Out"))) {
 	mkdir Out
 }
@@ -43,10 +54,14 @@ foreach ($file in $src_files) {
 	if ($file) {
 		if ("Src/${file}.cpp" -notin $main_files) {
 
-			$sourceModifiedDate = (Get-Item "Src/${file}.cpp").LastWriteTime
-			$targetModifiedDate = (Get-Item "Obj/${file}.o").LastWriteTime
+			$modifyCondition = $true
+			if (Test-Path "Obj/${file}.o") {				
+				$sourceModifiedDate = (Get-Item "Src/${file}.cpp").LastWriteTime
+				$targetModifiedDate = (Get-Item "Obj/${file}.o").LastWriteTime
+				$modifyCondition = ($sourceModifiedDate -gt $targetModifiedDate)
+			}
 
-			if ($sourceModifiedDate -gt $targetModifiedDate) {
+			if (($modifyCondition -eq $true) -or ($buildAll -eq $true)) {
 				Write-Output "    ${file}.cpp"
 
 				if (Test-Path "Obj/${file}.o") {
@@ -55,7 +70,6 @@ foreach ($file in $src_files) {
 
 				g++ $C_FLAGS  -I $include_dir -I $stb_inc_dir -I $sdl_inc_dir -L $sdl_lib_dir $sdl_linkables -o Obj/${file}.o -c Src/${file}.cpp
 			}
-
 
 		}
 	}
