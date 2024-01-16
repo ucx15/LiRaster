@@ -132,22 +132,19 @@ void Engine::rasterize() {
 	surface.fill(COLOR_BLACK);
 
 	Vec3 a,b,c;
+	
+	for (int i=0; i<n_points; i++) {
+		surface.fillCircle(ss_points[i], 4, COLOR_RED);
+	}
+
 	for (int i=0; i<n_tris*3; i+=3) {
 		a = ss_points[ tris[i]   ];
 		b = ss_points[ tris[i+1] ];
 		c = ss_points[ tris[i+2] ];
 
-		// surface.fillTris(a, b, c, COLOR_BLUE);
-
-		surface.drawLine(a, b, COLOR_WHITE, 1);
-		surface.drawLine(b, c, COLOR_WHITE, 1);
-		surface.drawLine(a, c, COLOR_WHITE, 1);
+		surface.fillTris(a, b, c, COLOR_BLUE);
+		surface.drawTris(a,b,c, COLOR_WHITE, 1);
 	}
-
-	for (int i=0; i<n_points; i++) {
-		surface.fillCircle(ss_points[i], 4, COLOR_RED);
-	}
-
 }
 
 

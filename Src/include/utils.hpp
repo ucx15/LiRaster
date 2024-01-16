@@ -11,11 +11,11 @@ constexpr float PI = 3.14159f;
 constexpr int RAND_GEN_LIM = 40;
 
 // Custom Colors
-const Color COLOR_WHITE = Color(0.9f, 0.9f, 0.9f);
-const Color COLOR_BLACK = Color(0.08f, 0.08f, 0.08f);
-const Color COLOR_RED   = Color(0.9f, 0, 0.15f);
-const Color COLOR_GREEN = Color(0, 0.9f, 0.15f);
-const Color COLOR_BLUE  = Color(0.15f, 0, 0.9f);
+const Color COLOR_WHITE = Color(0.9f, 0.9f, 0.8f);
+const Color COLOR_BLACK = Color(0.1f, 0.1f, 0.1f);
+const Color COLOR_RED   = Color(0.9f, 0.f, 0.2f);
+const Color COLOR_GREEN = Color(0, 0.9f, 0.20f);
+const Color COLOR_BLUE  = Color(0.f, 0.2, 0.9f);
 
 
 // Macro Expressions

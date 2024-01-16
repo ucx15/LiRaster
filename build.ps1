@@ -13,8 +13,8 @@ $main_files = "Src/main.cpp"
 
 $src_files =  "engine","vec", "color", "utils", "surface"
 
-$buildAll = $false
-$buildDebug = $true
+$buildAll = $true
+$buildDebug = $false
 
 
 $include_dir = "Src/Include/"
