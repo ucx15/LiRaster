@@ -1,8 +1,5 @@
-Obj/*.o
+Obj/
 Out/*png
 Libs/SDL2
-.versions
 
 *.exe
-
-buildlocal.ps1

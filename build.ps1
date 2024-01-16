@@ -13,14 +13,14 @@ $main_files = "Src/main.cpp"
 
 $src_files =  "engine","vec", "color", "utils", "surface"
 
-$buildAll = $true
+$buildAll = $false
 $buildDebug = $false
 
 
 $include_dir = "Src/Include/"
 
 $sdl_inc_dir = "Libs/SDL2/include/SDL2"
-$stb_inc_dir = "Libs/STB/"
+$stb_inc_dir = "Libs/"
 
 $sdl_lib_dir = "Libs/SDL2/lib"
 
@@ -38,6 +38,11 @@ if ($buildDebug) {
 
 if (!(Test-Path("./Out"))) {
 	mkdir Out
+}
+
+
+if (!(Test-Path("./Obj"))) {
+	mkdir Obj
 }
 
 
@@ -89,6 +94,7 @@ g++ $main_files $obj_files $C_FLAGS -o $out_file -I $include_dir -I $sdl_inc_dir
 if (Test-Path ./$out_file) {
 	Write-Output "Build Successfully"
 	Write-Output ""
+	./LiRaster
 }
 
 else {
