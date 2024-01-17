@@ -16,5 +16,7 @@ int main(int argc, char *argv[]) {
 	parseArgs(argc, argv);
 
 	Engine Runner = Engine();
-	return Runner.pipeline();
+	Runner.pipeline();
+
+	return EXIT_SUCCESS;
 }

@@ -11,4 +11,6 @@ constexpr float ASR = (float) W/H;
 
 const int FPS = 240;
 
+const float UPDATE_TIME = 2.f;  // in sec
+
 // Flags

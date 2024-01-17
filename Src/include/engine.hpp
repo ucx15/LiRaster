@@ -19,7 +19,7 @@ class Engine {
 		SDL_Event event;
 
 		bool isRunning;
-		uint64_t frame_count;
+		float deltaTime;
 
 		Surface surface;
 		Color* buffer;  // Array of pixels
@@ -36,7 +36,7 @@ class Engine {
 	public:
 		Engine();
 		~Engine();
-		int pipeline();
+		void pipeline();
 
 	private:
 		void setup();

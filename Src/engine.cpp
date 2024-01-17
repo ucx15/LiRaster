@@ -163,7 +163,7 @@ void Engine::render() {
 }
 
 
-int Engine::pipeline() {
+void Engine::pipeline() {
 	this->renderSetup();
 
 	n_points = 8;
@@ -241,50 +241,67 @@ int Engine::pipeline() {
 		tris[35] = 7;
 	}
 
-	TIME_PT t1, t2, t3, t_loop_st, t_loop_en, t5, t6;
+	TIME_PT tPtProject1, tPtProject2, tPtRaster1, tPtRaster2;
 
-	t1 = TIME_NOW();
+	// Projection
+	tPtProject1 = TIME_NOW();
 	this->project();
+	tPtProject2 = TIME_NOW();
 
-	t2 = TIME_NOW();
+	// Rasterization
+	tPtRaster1 = TIME_NOW();
 	this->rasterize();
-	
-	t3 = TIME_NOW();
+	tPtRaster2 = TIME_NOW();
+
+	// Logging
+	auto tProjectuS = TIME_DUR(tPtProject2, tPtProject2);
+	auto tRasteruS  = TIME_DUR(tPtRaster2, tPtRaster1);
+	std::cout << "Project\t " << tProjectuS << " us\tRaster\t " << tRasteruS << " us\n";
 
 
-	uint64_t t_project_us = TIME_DUR(t2, t1);
-	uint64_t t_raster_us  = TIME_DUR(t3, t2);
+	float lastLogTime = 0.f;
+	TIME_PT tPtRender1, tPtRender2, tDt1, tDt2;
 
-	std::cout << "Project\t " << t_project_us << " us\tRaster\t " << t_raster_us << " us\n";
-
+	tDt1 = TIME_NOW();
 
 	// Main Loop
-	frame_count = 1;
 	while (isRunning) {
+
+		// Calculate delta time
+		{
+			tDt2 = TIME_NOW();
+			deltaTime = TIME_DUR(tDt2, tDt1)/1E6F;
+			tDt1 = TIME_NOW();
+		}
+
+
+		// Handle Events
 		this->handleEvents();
 
-		t_loop_st = TIME_NOW();
-			this->render();
-		t_loop_en = TIME_NOW();
 
-		frame_count++;
+		// Render
+		tPtRender1 = TIME_NOW();
+			this->render();
+		tPtRender2 = TIME_NOW();
+
+		lastLogTime += deltaTime;
 
 		// Logs all the timings
-		if ( !(frame_count % (FPS/2)) ) {
-			uint64_t t_render_us  = TIME_DUR(t_loop_en, t_loop_st);
+		if ( lastLogTime>UPDATE_TIME ) {
+			lastLogTime = 0.f;
 
-			std::cout << "\tRender\t " << t_render_us / 1000.f << " ms\n";
+			auto tRender = TIME_DUR(tPtRender2, tPtRender1);
+			std::cout << "FPS: " << 1.f/deltaTime << "\tRender  " << tRender/1E3F << " ms\n";
 		}
 	}
 
+
+	TIME_PT tPtSave1, tPtSave2; 
 	// Save the Surface
-	t5 = TIME_NOW();
+	tPtSave1 = TIME_NOW();
 	surface.save_png("Out/img.png");
-	t6 = TIME_NOW();
+	tPtSave2 = TIME_NOW();
 
-
-	uint64_t t_save_us   = TIME_DUR(t6, t5);
+	uint64_t t_save_us   = TIME_DUR(tPtSave2, tPtSave1);
 	std::cout << "\nSave\t " << t_save_us / 1000.f << " ms\n";
-
-	return 0;
 }
