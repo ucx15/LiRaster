@@ -1,8 +1,10 @@
 #pragma once
 
-#include "vec.hpp"
+#include "glm/glm.hpp"
+#include "glm/vec3.hpp"
+#define Color glm::vec3
 
-
+/*
 class Color {
 	public:
 		float r;
@@ -39,3 +41,4 @@ class Color {
 		Color operator/=(float f);
 		Color operator/=(Color c);
 };
+*/

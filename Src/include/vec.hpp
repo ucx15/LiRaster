@@ -1,5 +1,10 @@
 #pragma once
+#include "glm/glm.hpp"
+ #include "glm/vec3.hpp"
 
+#define Vec3 glm::vec3
+
+/*
 class Vec3 {
 	public:
 		float x,y,z;
@@ -26,3 +31,4 @@ class Vec3 {
 		Vec3 cross(Vec3 v);		
 		Vec3 normalize();
 };
+*/

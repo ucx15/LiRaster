@@ -22,6 +22,7 @@ $include_dir = "Src/Include/"
 $sdl_inc_dir = "Libs/SDL2/include/SDL2"
 $stb_inc_dir = "Libs/"
 
+
 $sdl_lib_dir = "Libs/SDL2/lib"
 
 $sdl_linkables = "-lmingw32", "-lSDL2main", "-lSDL2"
@@ -86,7 +87,7 @@ foreach ($file in $src_files) {
 $obj_files = Get-ChildItem -Path Obj/
 
 Write-Output "Linking"
-g++ $main_files $obj_files $C_FLAGS -o $out_file -I $include_dir -I $sdl_inc_dir -L $sdl_lib_dir $sdl_linkables
+g++ $main_files $obj_files $C_FLAGS -o $out_file -I $include_dir -I $stb_inc_dir -I $sdl_inc_dir -L $sdl_lib_dir $sdl_linkables
 
 
 # Running current build

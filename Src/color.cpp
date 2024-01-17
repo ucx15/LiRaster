@@ -1,7 +1,7 @@
 #include "color.hpp"
 
 
-
+/*
 // Constructors
 Color::Color(float r_, float g_, float b_): r(r_), g(g_), b(b_) {}
 Color::Color(float c): r(c), g(c), b(c) {}
@@ -93,4 +93,4 @@ Color Color::operator/=(Color c) {
 	b /= c.b;
 	return *this;
 }
-
+*/

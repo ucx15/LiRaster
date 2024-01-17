@@ -3,6 +3,7 @@
 #include <chrono>
 #include <cstdint>
 
+#include "vec.hpp"
 #include "color.hpp"
 
 

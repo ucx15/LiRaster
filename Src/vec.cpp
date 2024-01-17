@@ -1,8 +1,8 @@
-#include <math.h>
+// #include <math.h>
 
 #include "vec.hpp"
 
-
+/*
 // Constructors
 Vec3::Vec3(float x_, float y_, float z_): x(x_), y(y_), z(z_) {}
 Vec3::Vec3(float x_): x(x_), y(x_), z(x_) {}
@@ -56,3 +56,4 @@ Vec3 Vec3::normalize() {
 	float mag = this->magnitude();
 	return Vec3((float)x/mag, (float)y/mag, (float)z/mag);
 }
+*/

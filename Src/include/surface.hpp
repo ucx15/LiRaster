@@ -1,5 +1,6 @@
 #pragma once
 
+#include "vec.hpp"
 #include "color.hpp"
 #include "line.hpp"
 #include "tris.hpp"

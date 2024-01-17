@@ -41,8 +41,7 @@ Vec3 rand_vec3_bw(float a, float b){
 
 Vec3 rand_vec3_on_sphere(Vec3 normal) {
 	Vec3 v = rand_vec3_bi();
-
-	if (v.dot(normal) < 0) {
+	if ( glm::dot(v, normal) < 0) {
 		return -v;
 	}
 	else {

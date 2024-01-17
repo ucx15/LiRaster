@@ -81,7 +81,7 @@ void Surface::toU32Surface(uint32_t *buffer) {
         g = m_data[i].g * 0xFF;
         b = m_data[i].b * 0xFF;
 
-        buffer[i] = (uint32_t) (r<<24) | (g<<16) | (b<< 8) | 0xFF;
+        buffer[i] = (uint32_t) (r<<24) | (g<<16) | (b<<8) | 0xFF;
     }
 }
 
@@ -112,10 +112,10 @@ int Surface::save_ppm(const char* file_path) {
     fprintf(file, "P6\n%d %d\n255\n", width, height);
     uint8_t *bytes = new uint8_t[3 * pixel_count];
 
-    int j = 0;
+    int j=0;
     Color c;
-    for (int i = 0; i < pixel_count; i++) {
-        c = m_data[i] * 255;
+    for (int i=0; i<pixel_count; i++) {
+        c = m_data[i] * 255.f;
         bytes[j++] = std::max(0, std::min(0xff, int(c.r)));  // R
         bytes[j++] = std::max(0, std::min(0xff, int(c.g)));  // G
         bytes[j++] = std::max(0, std::min(0xff, int(c.b)));  // B
@@ -157,10 +157,10 @@ void Surface::set_at(int x, int y, const Color &color) {
 
 // Base
 void Surface::fill(const Color &color) {
-    std::fill(&m_data[0], &m_data[pixel_count], color);
-	// for (int i=0; i<pixel_count; ++i) {
-	// 	m_data[i] = color;
-	// }
+    // std::fill(&m_data[0], &m_data[pixel_count], color);
+	for (int i=0; i<pixel_count; ++i) {
+		m_data[i] = color;
+	}
 }
 
 void Surface::fill_random() {
