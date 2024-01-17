@@ -10,28 +10,28 @@
 
 // Cosntructors and Destructors
 Engine::Engine() {
-	this->setup();
+	this->SDLSetup();
 }
 
 Engine::~Engine() {
 	this->quit();
 }
 
-void Engine::setup() {
-    sdl_window = SDL_CreateWindow("LiRaster", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, W, H, SDL_WINDOW_SHOWN);
-	if (sdl_window == NULL) {
+void Engine::SDLSetup() {
+    SDLWindow = SDL_CreateWindow("LiRaster", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, W, H, SDL_WINDOW_SHOWN);
+	if (SDLWindow == NULL) {
 		SDL_Log("SDL_CreateWindow creation failed: %s", SDL_GetError());
 		exit(EXIT_FAILURE);
 	}
 
-    sdl_renderer =  SDL_CreateRenderer(sdl_window, -1, SDL_RENDERER_ACCELERATED);
-	if (sdl_renderer == NULL) {
+    SDLRenderer =  SDL_CreateRenderer(SDLWindow, -1, SDL_RENDERER_ACCELERATED);
+	if (SDLRenderer == NULL) {
 		SDL_Log("SDL_CreateRenderer creation failed: %s", SDL_GetError());
 		exit(EXIT_FAILURE);
 	}
 
-	sdl_surface = SDL_CreateRGBSurface(0, W, H, 32,0xFF000000, 0x00FF0000, 0x0000FF00, 0x000000FF );
-	if (sdl_surface == NULL) {
+	SDLSurface = SDL_CreateRGBSurface(0, W, H, 32,0xFF000000, 0x00FF0000, 0x0000FF00, 0x000000FF );
+	if (SDLSurface == NULL) {
 		SDL_Log("SDL_CreateRGBSurface failed: %s", SDL_GetError());
 		exit(EXIT_FAILURE);
 	}
@@ -46,21 +46,21 @@ void Engine::setup() {
 void Engine::quit() {
 	// Cleanup
 	delete[] points;
-	delete[] ss_points;
+	delete[] ssPoints;
 	delete[] tris;
 
-	delete[] buffer;
+	delete[] enBuffer;
 
-	SDL_DestroyRenderer(sdl_renderer);
-	SDL_DestroyWindow(sdl_window);
+	SDL_DestroyRenderer(SDLRenderer);
+	SDL_DestroyWindow(SDLWindow);
 	SDL_Quit();
 
 }
 
 
 void Engine::handleEvents() {
-	while (SDL_PollEvent(&event)) {
-		if (event.type == SDL_QUIT) {
+	while (SDL_PollEvent(&SDLEvent)) {
+		if (SDLEvent.type == SDL_QUIT) {
 			isRunning = false;
 		}
 	}
@@ -69,23 +69,23 @@ void Engine::handleEvents() {
 
 
 // Main Render Method
-void Engine::renderSetup() {
+void Engine::engineSetup() {
 	float scale = tan(AOV * 0.5 * M_PI / 180) * EPSILON; 
     float r = ASR * scale;
 	float l = -r; 
     float t = scale;
 	float b = -t; 
 
-    ProjectionMatrix[0][0] = 2 * EPSILON / (r - l);  
-    ProjectionMatrix[1][1] = 2 * EPSILON / (t - b); 
-    ProjectionMatrix[2][0] = (r + l) / (r - l); 
-    ProjectionMatrix[2][1] = (t + b) / (t - b); 
-    ProjectionMatrix[2][2] = -(FAR_CLIP + EPSILON) / (FAR_CLIP - EPSILON); 
-    ProjectionMatrix[2][3] = -1; 
-    ProjectionMatrix[3][2] = -2 * FAR_CLIP * EPSILON / (FAR_CLIP - EPSILON); 
+    projectionMatrix[0][0] = 2 * EPSILON / (r - l);  
+    projectionMatrix[1][1] = 2 * EPSILON / (t - b); 
+    projectionMatrix[2][0] = (r + l) / (r - l); 
+    projectionMatrix[2][1] = (t + b) / (t - b); 
+    projectionMatrix[2][2] = -(FAR_CLIP + EPSILON) / (FAR_CLIP - EPSILON); 
+    projectionMatrix[2][3] = -1; 
+    projectionMatrix[3][2] = -2 * FAR_CLIP * EPSILON / (FAR_CLIP - EPSILON); 
 
-	buffer = new Color[W*H];
-	surface = Surface(buffer, W, H);
+	enBuffer = new Color[W*H];
+	enSurface = Surface(enBuffer, W, H);
 
 	isRunning = true;
 }
@@ -93,12 +93,12 @@ void Engine::renderSetup() {
 
 void Engine::project() {
 	float M[4][4];
-	memcpy(M, ProjectionMatrix, sizeof(float) * 16);
+	memcpy(M, projectionMatrix, sizeof(float) * 16);
 
 
-	for (int i=0; i<n_points; i++) {
+	for (int i=0; i<nPoints; i++) {
 		Vec3 &in = points[i];
-		Vec3 &out = ss_points[i];
+		Vec3 &out = ssPoints[i];
 
 		// Projection
 		out.x   = in.x*M[0][0] + in.y*M[1][0] + in.z*M[2][0] + M[3][0]; 
@@ -122,56 +122,56 @@ void Engine::project() {
 
 void Engine::rasterize() {
 	// Rendering Triangles from ss_points buffer
-	surface.fill(COLOR_BLACK);
+	enSurface.fill(COLOR_BLACK);
 
 	Vec3 a,b,c;
 
-	for (int i=0; i<n_points; i++) {
-		surface.fillCircle(ss_points[i], 4, COLOR_RED);
+	for (int i=0; i<nPoints; i++) {
+		enSurface.fillCircle(ssPoints[i], 4, COLOR_RED);
 	}
 
-	for (int i=0; i<n_tris*3; i+=3) {
-		a = ss_points[ tris[i]   ];
-		b = ss_points[ tris[i+1] ];
-		c = ss_points[ tris[i+2] ];
+	for (int i=0; i<nTris*3; i+=3) {
+		a = ssPoints[ tris[i]   ];
+		b = ssPoints[ tris[i+1] ];
+		c = ssPoints[ tris[i+2] ];
 
-		surface.fillTris(a,b,c, COLOR_BLUE);
-		surface.drawTris(a,b,c, COLOR_WHITE, 1);
+		enSurface.fillTris(a,b,c, COLOR_BLUE);
+		enSurface.drawTris(a,b,c, COLOR_WHITE, 1);
 	}
 }
 
 
 void Engine::render() {
 	// Copying data to SDL Surface
-	SDL_LockSurface(sdl_surface);
-		surface.toU32Surface((uint32_t*)sdl_surface->pixels);
-	SDL_UnlockSurface(sdl_surface);
+	SDL_LockSurface(SDLSurface);
+		enSurface.toU32Surface((uint32_t*)SDLSurface->pixels);
+	SDL_UnlockSurface(SDLSurface);
 
 
-	sdl_texture = SDL_CreateTextureFromSurface(sdl_renderer, sdl_surface);
+	SDLTexture = SDL_CreateTextureFromSurface(SDLRenderer, SDLSurface);
 		
-		if (sdl_texture == NULL) {
+		if (SDLTexture == NULL) {
 			SDL_Log("SDL_CreateTextureFromSurface failed: %s", SDL_GetError());
 			return;
 		}
 
-		SDL_RenderClear(sdl_renderer);
-		SDL_RenderCopy(sdl_renderer, sdl_texture, NULL, NULL);
-		SDL_RenderPresent(sdl_renderer);
+		SDL_RenderClear(SDLRenderer);
+		SDL_RenderCopy(SDLRenderer, SDLTexture, NULL, NULL);
+		SDL_RenderPresent(SDLRenderer);
 
-	SDL_DestroyTexture(sdl_texture);
+	SDL_DestroyTexture(SDLTexture);
 }
 
 
 void Engine::pipeline() {
-	this->renderSetup();
+	this->engineSetup();
 
-	n_points = 8;
-	n_tris   = 12;
+	nPoints = 8;
+	nTris   = 12;
 
-	points    = new Vec3[n_points];
-	ss_points = new Vec3[n_points];
-	tris      = new int[3*n_tris];
+	points    = new Vec3[nPoints];
+	ssPoints = new Vec3[nPoints];
+	tris      = new int[3*nTris];
 
 	Vec3 pos = Vec3(0, 0, -1.f);
 	float rad = .125f;
@@ -299,7 +299,7 @@ void Engine::pipeline() {
 	TIME_PT tPtSave1, tPtSave2; 
 	// Save the Surface
 	tPtSave1 = TIME_NOW();
-	surface.save_png("Out/img.png");
+	enSurface.save_png("Out/img.png");
 	tPtSave2 = TIME_NOW();
 
 	uint64_t t_save_us   = TIME_DUR(tPtSave2, tPtSave1);

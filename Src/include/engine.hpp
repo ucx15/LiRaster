@@ -12,26 +12,29 @@
 class Engine {
 
 	private:
-		SDL_Window* sdl_window = NULL;
-		SDL_Renderer* sdl_renderer = NULL;
-		SDL_Surface* sdl_surface = NULL;
-		SDL_Texture* sdl_texture = NULL;
-		SDL_Event event;
+		// SDL Stuff
+		SDL_Window *SDLWindow     = NULL;
+		SDL_Renderer *SDLRenderer = NULL;
+		SDL_Surface *SDLSurface   = NULL;
+		SDL_Texture *SDLTexture   = NULL;
+		SDL_Event SDLEvent;
 
+		// Engine Stuff
+		Surface enSurface;
+		Color *enBuffer;  // Array of pixels
+
+		int nPoints;
+		int nTris;
+
+		Vec3 *points;
+		Vec3 *ssPoints;
+		int *tris;
+
+		// Rendering Stuff
 		bool isRunning;
 		float deltaTime;
 
-		Surface surface;
-		Color* buffer;  // Array of pixels
-
-		Vec3* points;
-		Vec3* ss_points;
-		int* tris;
-
-		int n_points;
-		int n_tris;
-
-		float ProjectionMatrix[4][4] = {0.f};
+		float projectionMatrix[4][4] = {0.f};
 
 	public:
 		Engine();
@@ -39,13 +42,12 @@ class Engine {
 		void pipeline();
 
 	private:
-		void setup();
+		void SDLSetup();
 		void quit();
 		void handleEvents();
 
-		void renderSetup();
+		void engineSetup();
 		void project();
 		void render();
 		void rasterize();
-
 };
