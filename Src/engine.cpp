@@ -1,5 +1,4 @@
 #include <iostream>
-#include <chrono>
 #include <math.h>
 
 #include "SDL.h"
@@ -7,12 +6,6 @@
 #include "settings.hpp"
 #include "utils.hpp"
 
-
-using namespace std::chrono;
-
-#define TIME_PT steady_clock::time_point
-#define TIME_NOW() steady_clock::now()
-#define TIME_CAST_US(b, a) duration_cast<microseconds>(b - a)
 
 
 // Cosntructors and Destructors
@@ -259,8 +252,8 @@ int Engine::pipeline() {
 	t3 = TIME_NOW();
 
 
-	uint64_t t_project_us = TIME_CAST_US(t2, t1).count();
-	uint64_t t_raster_us  = TIME_CAST_US(t3, t2).count();
+	uint64_t t_project_us = TIME_DUR(t2, t1);
+	uint64_t t_raster_us  = TIME_DUR(t3, t2);
 
 	std::cout << "Project\t " << t_project_us << " us\tRaster\t " << t_raster_us << " us\n";
 
@@ -278,7 +271,7 @@ int Engine::pipeline() {
 
 		// Logs all the timings
 		if ( !(frame_count % (FPS/2)) ) {
-			uint64_t t_render_us  = TIME_CAST_US(t_loop_en, t_loop_st).count();
+			uint64_t t_render_us  = TIME_DUR(t_loop_en, t_loop_st);
 
 			std::cout << "\tRender\t " << t_render_us / 1000.f << " ms\n";
 		}
@@ -290,7 +283,7 @@ int Engine::pipeline() {
 	t6 = TIME_NOW();
 
 
-	uint64_t t_save_us   = TIME_CAST_US(t6, t5).count();
+	uint64_t t_save_us   = TIME_DUR(t6, t5);
 	std::cout << "\nSave\t " << t_save_us / 1000.f << " ms\n";
 
 	return 0;

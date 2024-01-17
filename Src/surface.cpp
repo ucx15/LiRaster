@@ -166,7 +166,7 @@ void Surface::fill(const Color &color) {
 void Surface::fill_random() {
 	srand(time(NULL));
 	for (int i = 0; i < pixel_count; ++i) {
-		m_data[i] = rand_color();
+		m_data[i] = randColor();
 	}
 }
 

@@ -13,7 +13,7 @@ $main_files = "Src/main.cpp"
 
 $src_files =  "engine","vec", "color", "utils", "surface"
 
-$buildAll = $false
+$buildAll = $true
 $buildDebug = $false
 
 

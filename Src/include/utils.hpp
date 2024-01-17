@@ -2,14 +2,17 @@
 
 #include <chrono>
 #include <cstdint>
+#include <iostream>
 
 #include "vec.hpp"
 #include "color.hpp"
 
 
+using namespace std::chrono;
+
+
 // Constants
-constexpr float PI = 3.14159f;
-constexpr int RAND_GEN_LIM = 40;
+const float PI = 3.14159f;
 
 // Custom Colors
 const Color COLOR_WHITE = Color(0.9f, 0.9f, 0.8f);
@@ -20,47 +23,35 @@ const Color COLOR_BLUE  = Color(0.f, 0.2, 0.9f);
 
 
 // Macro Expressions
-// #define randf ((float) rand() / RAND_MAX)
-#define randf ((float) pcg32_random_r() / UINT32_MAX)
+#define TIME_PT steady_clock::time_point
+#define TIME_NOW() steady_clock::now()
+#define TIME_DUR(b, a) duration_cast<microseconds>(b - a).count()
+
+#define print_vec(v) (std::cout << (v).x << ' ' << (v).y << ' ' << (v).z << '\n';)
+#define print_color(c) (std::cout << (c).r << ' ' << (c).g << ' ' << (c).b << '\n';)
+
+
+#define randf() ((float) pcg32_random_r() / UINT32_MAX)
+
+// components of vector are between 0 and 1
+#define randVec3() ( Vec3(randf(), randf(), randf()) )
+
+#define randColor() ( Color(randf(), randf(), randf()) )
+
+// components of vector are between -1 and 1
+#define randBiVec3() ( Vec3(2*randf() -1, 2*randf() -1, 2*randf() -1) )
+
+// components of vector are between a and b
+#define randBwVec3(a, b) ( Vec3(glm::max(a, b*randf), glm::max(a, b*randf), glm::max(a, b*randf)) )
 
 
 // Functions
 uint32_t pcg32_random_r();
-
-void print_vec(const Vec3 vec);
-void print_color(const Color color);
-
-
-
-// components of vector is between 0 and 1
-Vec3 rand_vec3();
-
-// components of vector is between -1 and 1
-Vec3 rand_vec3_bi();
-
-// component of vector is between a and b
-Vec3 rand_vec3_bw(float a, float b);
-
-Vec3 rand_vec3_on_sphere(Vec3 normal);
-
-Color rand_color();
+Vec3 randVec3onSphere(Vec3 normal);
 
 
 // Structs
 struct pcg_random_t{
 	uint64_t state = 100;
 	uint64_t inc = 100;
-};
-
-
-
-class ScopedTimer {
-	private:
-		std::chrono::steady_clock::time_point t_pt1, t_pt2;
-		const char * _msg;
-		bool isSuffix;
-
-	public:
-		ScopedTimer(const char * msg, bool showUnits);
-		~ScopedTimer();
 };
