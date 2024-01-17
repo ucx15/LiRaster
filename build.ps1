@@ -42,8 +42,8 @@ if (!(Test-Path("./Out"))) {
 }
 
 
-if (!(Test-Path("./Obj"))) {
-	mkdir Obj
+if (!(Test-Path("./Asm"))) {
+	mkdir Asm
 }
 
 
@@ -61,20 +61,20 @@ foreach ($file in $src_files) {
 		if ("Src/${file}.cpp" -notin $main_files) {
 
 			$modifyCondition = $true
-			if (Test-Path "Obj/${file}.o") {				
+			if (Test-Path "Asm/${file}.asm") {				
 				$sourceModifiedDate = (Get-Item "Src/${file}.cpp").LastWriteTime
-				$targetModifiedDate = (Get-Item "Obj/${file}.o").LastWriteTime
+				$targetModifiedDate = (Get-Item "Asm/${file}.asm").LastWriteTime
 				$modifyCondition = ($sourceModifiedDate -gt $targetModifiedDate)
 			}
 
 			if (($modifyCondition -eq $true) -or ($buildAll -eq $true)) {
 				Write-Output "    ${file}.cpp"
-
-				if (Test-Path "Obj/${file}.o") {
-					Remove-Item Obj/${file}.o
+			
+				if (Test-Path "Asm/${file}.asm") {
+					Remove-Item Asm/${file}.asm
 				}
 
-				g++ $C_FLAGS  -I $include_dir -I $stb_inc_dir -I $sdl_inc_dir -L $sdl_lib_dir $sdl_linkables -o Obj/${file}.o -c Src/${file}.cpp
+				g++ $C_FLAGS  -I $include_dir -I $stb_inc_dir -I $sdl_inc_dir -L $sdl_lib_dir $sdl_linkables -o Asm/${file}.s -S Src/${file}.cpp
 			}
 
 		}
@@ -84,7 +84,7 @@ foreach ($file in $src_files) {
 
 
 # Linking
-$obj_files = Get-ChildItem -Path Obj/
+$obj_files = Get-ChildItem -Path Asm/
 
 Write-Output "Linking"
 g++ $main_files $obj_files $C_FLAGS -o $out_file -I $include_dir -I $stb_inc_dir -I $sdl_inc_dir -L $sdl_lib_dir $sdl_linkables
