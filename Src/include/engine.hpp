@@ -34,7 +34,7 @@ class Engine {
 		bool isRunning;
 		float deltaTime;
 
-		float projectionMatrix[4][4] = {0.f};
+		glm::mat4 projMat;
 
 	public:
 		Engine();

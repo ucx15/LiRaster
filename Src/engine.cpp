@@ -1,11 +1,7 @@
-#include <iostream>
-#include <math.h>
-
 #include "SDL.h"
 #include "engine.hpp"
 #include "settings.hpp"
 #include "utils.hpp"
-
 
 
 // Cosntructors and Destructors
@@ -70,52 +66,33 @@ void Engine::handleEvents() {
 
 // Main Render Method
 void Engine::engineSetup() {
-	float scale = tan(AOV * 0.5 * M_PI / 180) * EPSILON; 
-    float r = ASR * scale;
-	float l = -r; 
-    float t = scale;
-	float b = -t; 
-
-    projectionMatrix[0][0] = 2 * EPSILON / (r - l);  
-    projectionMatrix[1][1] = 2 * EPSILON / (t - b); 
-    projectionMatrix[2][0] = (r + l) / (r - l); 
-    projectionMatrix[2][1] = (t + b) / (t - b); 
-    projectionMatrix[2][2] = -(FAR_CLIP + EPSILON) / (FAR_CLIP - EPSILON); 
-    projectionMatrix[2][3] = -1; 
-    projectionMatrix[3][2] = -2 * FAR_CLIP * EPSILON / (FAR_CLIP - EPSILON); 
-
 	enBuffer = new Color[W*H];
 	enSurface = Surface(enBuffer, W, H);
+
+	projMat = glm::perspective(glm::radians(AOV), ASR, EPSILON, FAR_CLIP);
 
 	isRunning = true;
 }
 
 
 void Engine::project() {
-	float M[4][4];
-	memcpy(M, projectionMatrix, sizeof(float) * 16);
-
-
 	for (int i=0; i<nPoints; i++) {
-		Vec3 &in = points[i];
-		Vec3 &out = ssPoints[i];
+		Vec3 &in = points[i];     // Input Vector
+		Vec3 &out = ssPoints[i];  // Output Vector
 
-		// Projection
-		out.x   = in.x*M[0][0] + in.y*M[1][0] + in.z*M[2][0] + M[3][0]; 
-		out.y   = in.x*M[0][1] + in.y*M[1][1] + in.z*M[2][1] + M[3][1]; 
-		out.z   = in.x*M[0][2] + in.y*M[1][2] + in.z*M[2][2] + M[3][2]; 
-		float w = in.x*M[0][3] + in.y*M[1][3] + in.z*M[2][3] + M[3][3]; 
+		Vec4 intr = projMat * Vec4(in, 1.0f);
 
-		if (w != 1) { 
-			out.x /= w; 
-			out.y /= w; 
-			out.z /= w; 
-		}
+        // Normalize intr coordinates
+        if (intr.w != 0) {
+            out.x = intr.x/intr.w;
+            out.y = intr.y/intr.w;
+            out.z = intr.z/intr.w;
+        }
 
 		// Normal Space to Screen Space conversion
 		// (-1, 1)  -- x2 ->  (0, 2)  -- /2 ->  (0, 1)  -- xS ->  (0, S)
-		out.x = W*(1.f + out.x) / 2.f;
-		out.y = H*(1.f - out.y) / 2.f;
+		out.x = W * (1.f+out.x)/2.f;
+		out.y = H * (1.f-out.y)/2.f;
 	}
 }
 
@@ -143,10 +120,7 @@ void Engine::rasterize() {
 
 void Engine::render() {
 	// Copying data to SDL Surface
-	SDL_LockSurface(SDLSurface);
-		enSurface.toU32Surface((uint32_t*)SDLSurface->pixels);
-	SDL_UnlockSurface(SDLSurface);
-
+	enSurface.toU32Surface((uint32_t*)SDLSurface->pixels);
 
 	SDLTexture = SDL_CreateTextureFromSurface(SDLRenderer, SDLSurface);
 		
@@ -254,7 +228,7 @@ void Engine::pipeline() {
 	tPtRaster2 = TIME_NOW();
 
 	// Logging
-	auto tProjectuS = TIME_DUR(tPtProject2, tPtProject2);
+	auto tProjectuS = TIME_DUR(tPtProject2, tPtProject1);
 	auto tRasteruS  = TIME_DUR(tPtRaster2, tPtRaster1);
 	std::cout << "Project\t " << tProjectuS << " us\tRaster\t " << tRasteruS << " us\n";
 

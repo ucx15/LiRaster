@@ -23,8 +23,11 @@ const Color COLOR_BLUE  = Color(0.f, 0.2, 0.9f);
 
 
 // Macro Expressions
-#define TIME_PT steady_clock::time_point
-#define TIME_NOW() steady_clock::now()
+// #define _CLOCK_TYPE steady_clock
+#define _CLOCK_TYPE high_resolution_clock
+
+#define TIME_PT _CLOCK_TYPE::time_point
+#define TIME_NOW() _CLOCK_TYPE::now()
 #define TIME_DUR(b, a) duration_cast<microseconds>(b - a).count()
 
 #define print_vec(v) (std::cout << (v).x << ' ' << (v).y << ' ' << (v).z << '\n';)

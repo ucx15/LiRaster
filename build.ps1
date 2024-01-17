@@ -8,7 +8,7 @@
 # -------- BUILD SETTINGS --------
 $C_FLAGS = "-Wall", "-Wextra", "-pedantic", "-std=c++20", "-masm=intel"
 
-$Optimization_flags = "-O3"
+$Optimization_flags = "-O3", "-mavx512f", "-march=native"
 # $Optimization_flags = "-ggdb", "-g3"
 
 $LINKER_FLAGS = "-lmingw32", "-lSDL2main", "-lSDL2", "-s"
