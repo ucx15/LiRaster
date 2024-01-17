@@ -291,7 +291,7 @@ void Engine::pipeline() {
 			lastLogTime = 0.f;
 
 			auto tRender = TIME_DUR(tPtRender2, tPtRender1);
-			std::cout << "FPS: " << 1.f/deltaTime << "\tRender  " << tRender/1E3F << " ms\n";
+			std::cout << "FPS " << 1/deltaTime << "\tRender  " << tRender/1E3F << " ms\tdt " << deltaTime*1E3F << " ms\n";
 		}
 	}
 
