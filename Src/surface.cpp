@@ -4,15 +4,11 @@
 #include <time.h>
 
 
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wmissing-field-initializers"
-    #define STB_IMAGE_WRITE_IMPLEMENTATION
-    #include "stb_image_write.h"
-#pragma GCC diagnostic pop
+#define STB_IMAGE_WRITE_IMPLEMENTATION
+#include "stb_image_write_clean.h"
 
 #include "surface.hpp"
 #include "utils.hpp" 
-
 
 
 #define ACES_a 0.0245786f
@@ -20,7 +16,6 @@
 #define ACES_c 0.000090537f
 #define ACES_d 0.983729f
 #define ACES_e 0.4329510f
-
 
 
 // --------- Constructors ---------

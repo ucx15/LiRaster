@@ -61,17 +61,17 @@ foreach ($file in $src_files) {
 		if ("Src/${file}.cpp" -notin $main_files) {
 
 			$modifyCondition = $true
-			if (Test-Path "Asm/${file}.asm") {				
+			if (Test-Path "Asm/${file}.s") {
 				$sourceModifiedDate = (Get-Item "Src/${file}.cpp").LastWriteTime
-				$targetModifiedDate = (Get-Item "Asm/${file}.asm").LastWriteTime
+				$targetModifiedDate = (Get-Item "Asm/${file}.s").LastWriteTime
 				$modifyCondition = ($sourceModifiedDate -gt $targetModifiedDate)
 			}
 
 			if (($modifyCondition -eq $true) -or ($buildAll -eq $true)) {
 				Write-Output "    ${file}.cpp"
 			
-				if (Test-Path "Asm/${file}.asm") {
-					Remove-Item Asm/${file}.asm
+				if (Test-Path "Asm/${file}.s") {
+					Remove-Item Asm/${file}.s
 				}
 
 				g++ $C_FLAGS  -I $include_dir -I $stb_inc_dir -I $sdl_inc_dir -L $sdl_lib_dir $sdl_linkables -o Asm/${file}.s -S Src/${file}.cpp
