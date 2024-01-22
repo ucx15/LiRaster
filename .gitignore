@@ -1,5 +1,7 @@
 Asm/
-Out/*png
+Tests/
+Objs/
+Out/*.png
 Libs/SDL2
 
 *.exe

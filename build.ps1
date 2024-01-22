@@ -18,7 +18,7 @@ $buildAll = $true
 
 $out_file = "LiRaster.exe"
 
-$src_files = "main", "engine","vec", "color", "utils", "surface"
+$src_files = "main", "engine", "utils", "surface"
 
 
 $include_dir = "Src/Include/"

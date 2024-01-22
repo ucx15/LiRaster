@@ -15,11 +15,13 @@ using namespace std::chrono;
 const float PI = 3.14159f;
 
 // Custom Colors
-const Color COLOR_WHITE = Color(0.9f, 0.9f, 0.8f);
-const Color COLOR_BLACK = Color(0.1f, 0.1f, 0.1f);
-const Color COLOR_RED   = Color(0.9f, 0.f, 0.2f);
-const Color COLOR_GREEN = Color(0, 0.9f, 0.20f);
-const Color COLOR_BLUE  = Color(0.f, 0.2, 0.9f);
+const Color COLOR_WHITE(0.9f, 0.9f, 0.8f);
+const Color COLOR_BLACK(0.1f, 0.1f, 0.1f);
+const Color COLOR_RED(0.9f, 0.f, 0.2f);
+const Color COLOR_GREEN(0.f, 0.9f, 0.20f);
+const Color COLOR_BLUE(0.f, 0.2f, 0.9f);
+const Color COLOR_YELLOW(0.9f, 0.9f, 0.f);
+const Color COLOR_PURPLE(0.2f, 0.2f, 0.9f);
 
 
 // Macro Expressions
@@ -29,9 +31,11 @@ const Color COLOR_BLUE  = Color(0.f, 0.2, 0.9f);
 #define TIME_PT _CLOCK_TYPE::time_point
 #define TIME_NOW() _CLOCK_TYPE::now()
 #define TIME_DUR(b, a) duration_cast<microseconds>(b - a).count()
+#define TIME_DUR_NS(b, a) duration_cast<nanoseconds>(b - a).count()
 
-#define print_vec(v) (std::cout << (v).x << ' ' << (v).y << ' ' << (v).z << '\n';)
-#define print_color(c) (std::cout << (c).r << ' ' << (c).g << ' ' << (c).b << '\n';)
+#define LOG_VEC3(v) std::cout << (v).x << ' ' << (v).y << ' ' << (v).z << '\n';
+#define LOG_VEC4(v) std::cout << (v).x << ' ' << (v).y << ' ' << (v).z << ' ' << (v).w << '\n';
+#define LOG_COLOR(c) std::cout << (c).r << ' ' << (c).g << ' ' << (c).b << '\n';
 
 
 #define randf() ((float) pcg32_random_r() / UINT32_MAX)

@@ -18,13 +18,19 @@
 #define ACES_e 0.4329510f
 
 
+// Private macro of Surface class
+#define _SET_SURF_AT(x, y, color) _surfData[(y)*surfWidth + (x)] = (color)
+#define _SURF_AT(x, y) _surfData[(y)*surfWidth + (x)]
+
+
+
 // --------- Constructors ---------
 Surface::Surface() {}
 
-Surface::Surface(Color* data, int w, int h): width(w), height(h) {
-    pixel_count  = width * height;
-    aspect_ratio = (float)width/height;
-    m_data = data;
+Surface::Surface(Color* data, int w, int h): surfWidth(w), surfHeight(h) {
+    surfSize  = surfWidth * surfHeight;
+    surfAspectRatio = (float)surfWidth/surfHeight;
+    _surfData = data;
 }
 
 
@@ -32,26 +38,26 @@ Surface::Surface(Color* data, int w, int h): width(w), height(h) {
 
 // --------- Private Methods ---------
 void Surface::_aces() {
-    for (int i=0; i<pixel_count; i++) {
-        m_data[i].r = std::max(0.f, (float)(m_data[i].r*(m_data[i].r+ACES_a) - ACES_b) / (m_data[i].r * (m_data[i].r*ACES_c + ACES_d) + ACES_e));
-        m_data[i].g = std::max(0.f, (float)(m_data[i].g*(m_data[i].g+ACES_a) - ACES_b) / (m_data[i].g * (m_data[i].g*ACES_c + ACES_d) + ACES_e));
-        m_data[i].b = std::max(0.f, (float)(m_data[i].b*(m_data[i].b+ACES_a) - ACES_b) / (m_data[i].b * (m_data[i].b*ACES_c + ACES_d) + ACES_e));
+    for (int i=0; i<surfSize; i++) {
+        _surfData[i].r = std::max(0.f, (float)(_surfData[i].r*(_surfData[i].r+ACES_a) - ACES_b) / (_surfData[i].r * (_surfData[i].r*ACES_c + ACES_d) + ACES_e));
+        _surfData[i].g = std::max(0.f, (float)(_surfData[i].g*(_surfData[i].g+ACES_a) - ACES_b) / (_surfData[i].g * (_surfData[i].g*ACES_c + ACES_d) + ACES_e));
+        _surfData[i].b = std::max(0.f, (float)(_surfData[i].b*(_surfData[i].b+ACES_a) - ACES_b) / (_surfData[i].b * (_surfData[i].b*ACES_c + ACES_d) + ACES_e));
     }
 }
 
 void Surface::_reinhard() {
-    for (int i=0; i<pixel_count; i++) {
-        m_data[i].r = (float) m_data[i].r/(1+m_data[i].r);
-        m_data[i].g = (float) m_data[i].g/(1+m_data[i].g);
-        m_data[i].b = (float) m_data[i].b/(1+m_data[i].b);
+    for (int i=0; i<surfSize; i++) {
+        _surfData[i].r = (float) _surfData[i].r/(1+_surfData[i].r);
+        _surfData[i].g = (float) _surfData[i].g/(1+_surfData[i].g);
+        _surfData[i].b = (float) _surfData[i].b/(1+_surfData[i].b);
     }
 }
 
 void Surface::_gamma() {
-    for (int i=0; i<pixel_count; i++) {
-        m_data[i].r = sqrtf(m_data[i].r);
-        m_data[i].g = sqrtf(m_data[i].g);
-        m_data[i].b = sqrtf(m_data[i].b);
+    for (int i=0; i<surfSize; i++) {
+        _surfData[i].r = sqrtf(_surfData[i].r);
+        _surfData[i].g = sqrtf(_surfData[i].g);
+        _surfData[i].b = sqrtf(_surfData[i].b);
     }
 }
 
@@ -71,10 +77,10 @@ void Surface::toU32Surface(uint32_t *buffer) {
     uint8_t g;
     uint8_t b;
 
-    for (int i=0; i<pixel_count; i++) {
-        r = m_data[i].r * 0xFF;
-        g = m_data[i].g * 0xFF;
-        b = m_data[i].b * 0xFF;
+    for (int i=0; i<surfSize; i++) {
+        r = _surfData[i].r * 0xFF;
+        g = _surfData[i].g * 0xFF;
+        b = _surfData[i].b * 0xFF;
 
         buffer[i] = (uint32_t) (r<<24) | (g<<16) | (b<<8) | 0xFF;
     }
@@ -82,302 +88,405 @@ void Surface::toU32Surface(uint32_t *buffer) {
 
 
 // Saving
-int Surface::save_float_buffer(const char* file_path) {
+int Surface::saveFloatBuffer(const char* file_path) {
     FILE *file = fopen(file_path, "wb");
     if (file == NULL) {
         return -1;
     }
 
-    int size = pixel_count * 3;
-    int dim[2] = {width, height};
+    int size = surfSize * 3;
+    int dim[2] = {surfWidth, surfHeight};
     fwrite(dim, sizeof(int)*2, 1, file);
 
-    fwrite(m_data, sizeof(float)*size, 1, file);
+    fwrite(_surfData, sizeof(float)*size, 1, file);
     fclose(file);
     
     return 0;
 }
 
-int Surface::save_ppm(const char* file_path) {
+int Surface::savePPM(const char* file_path) {
     FILE *file = fopen(file_path, "wb");
     if (file == NULL) {
         return -1;
     }
 
-    fprintf(file, "P6\n%d %d\n255\n", width, height);
-    uint8_t *bytes = new uint8_t[3 * pixel_count];
+    fprintf(file, "P6\n%d %d\n255\n", surfWidth, surfHeight);
+    uint8_t *bytes = new uint8_t[3 * surfSize];
 
     int j=0;
     Color c;
-    for (int i=0; i<pixel_count; i++) {
-        c = m_data[i] * 255.f;
+    for (int i=0; i<surfSize; i++) {
+        c = _surfData[i] * 255.f;
         bytes[j++] = std::max(0, std::min(0xff, int(c.r)));  // R
         bytes[j++] = std::max(0, std::min(0xff, int(c.g)));  // G
         bytes[j++] = std::max(0, std::min(0xff, int(c.b)));  // B
     }
 
-    fwrite(bytes, 3*pixel_count*sizeof(uint8_t), 1, file);
+    fwrite(bytes, 3*surfSize*sizeof(uint8_t), 1, file);
     fclose(file);
 
     delete[] bytes;
     return 0;
 }
 
-int Surface::save_png(const char* file_name) {
-    uint8_t *bytes = new uint8_t[3 * pixel_count];
+int Surface::savePNG(const char* file_name) {
+    uint8_t *bytes = new uint8_t[3 * surfSize];
     Color c;
 
     int j = 0;
-    for (int i = 0; i < pixel_count; i++) {
-        c = m_data[i] * 255.f;
+    for (int i = 0; i < surfSize; i++) {
+        c = _surfData[i] * 255.f;
         bytes[j++] = std::max(0, std::min(0xff, (int)c.r));  // R
         bytes[j++] = std::max(0, std::min(0xff, (int)c.g));  // G
         bytes[j++] = std::max(0, std::min(0xff, (int)c.b));  // B
     }
 
-    stbi_write_png(file_name, width, height, 3, bytes, 3*width*sizeof(uint8_t));
+    stbi_write_png(file_name, surfWidth, surfHeight, 3, bytes, 3*surfWidth*sizeof(uint8_t));
     delete[] bytes;
     return 0;
 }
 
 
 // Drawing Methods
-void Surface::set_at(int x, int y, const Color &color) {
-    int idx = y*width + x;
-    if (idx < pixel_count) {
-        m_data[idx] = color;
-    }
+void Surface::setAt(int x, int y, const Color &color) {
+    _SET_SURF_AT(x, y, color);
 }
 
 
-// Base
 void Surface::fill(const Color &color) {
-    // std::fill(&m_data[0], &m_data[pixel_count], color);
-	for (int i=0; i<pixel_count; ++i) {
-		m_data[i] = color;
+	for (int i=0; i<surfSize; ++i) {
+		_surfData[i] = color;
 	}
 }
 
-void Surface::fill_random() {
+void Surface::fillNoise() {
 	srand(time(NULL));
-	for (int i = 0; i < pixel_count; ++i) {
-		m_data[i] = randColor();
+	for (int i = 0; i < surfSize; ++i) {
+		_surfData[i] = randColor();
 	}
-}
-
-
-
-// Cicles
-void Surface::drawCircle(int x0, int y0, int r, const Color &color, int thickness) {
-    if ( (r < 1) || (thickness < 1) ) {
-        return;
-    }
-
-    int y_st = std::max(0, std::min( height, y0 - r));
-    int y_en = std::max(0, std::min( height, y0+r+1 ));
-    int x_st = std::max(0, std::min( width,  x0 - r));
-    int x_en = std::max(0, std::min( width,  x0+r+1 ));
-
-    int r_sq = r*r;
-    int rt_sq = (r-thickness)*(r-thickness);
-
-    int d_sq;
-
-    for (int y=y_st; y<y_en; y++) {
-        for (int x=x_st; x<x_en; x++) {
-
-            d_sq = (x-x0)*(x-x0) + (y-y0)*(y-y0);
-            if ( (d_sq > rt_sq)  && (d_sq < r_sq) ) {
-                m_data[(y) * width + (x)] = color;
-            }
-
-        }
-    }
-
-}
-
-void Surface::drawCircle(const Vec3 &pos_vec, int r, const Color &color, int thickness) {
-    this->drawCircle(pos_vec.x, pos_vec.y, r, color, thickness);
-}
-
-void Surface::drawCircle(const Circle &circle, const Color &color, int thickness) {
-    this->drawCircle(circle.x, circle.y, circle.r, color, thickness);
-}
-
-
-void Surface::fillCircle(int x0, int y0, int r, const Color &color) {
-        if ( r < 1 ) {
-        return;
-    }
-
-    int y_st = std::max(0, std::min( height, y0 - r));
-    int y_en = std::max(0, std::min( height, y0+r+1 ));
-    int x_st = std::max(0, std::min( width,  x0 - r));
-    int x_en = std::max(0, std::min( width,  x0+r+1 ));
-    
-    for (int y=y_st; y<y_en; y++) {
-        for (int x=x_st; x<x_en; x++) {
-            if ( ((x-x0)*(x-x0) + (y-y0)*(y-y0)) < (r*r) ) {
-                m_data[y*width + x] = color;
-            }
-        }
-    }
-
-}
-
-void Surface::fillCircle(const Vec3 &pos_vec, int r, const Color &color) {
-    this->fillCircle(pos_vec.x, pos_vec.y, r, color);
-}
-
-void Surface::fillCircle(const Circle &circle, const Color &color) {
-    this->fillCircle(circle.x, circle.y, circle.r, color);
-}
-
-
-// Rectangles
-void Surface::drawRect(int x0, int y0, int w, int h, const Color &color, int thickness) {
-    this->drawLine(x0, y0, x0+w, y0, color, thickness);
-    this->drawLine(x0, y0+h, x0+w, y0+h, color, thickness);
-    this->drawLine(x0, y0, x0, y0+h, color, thickness);
-    this->drawLine(x0+w, y0, x0+w, y0+h, color, thickness);
-}
-
-void Surface::drawRect(const Vec3 &pos_vec, const Vec3 &size_vec, const Color &color, int thickness) {
-    this->drawRect(pos_vec.x, pos_vec.y, size_vec.x, size_vec.y, color, thickness);
-}
-
-void Surface::drawRect(const Rect &rect, const Color &color, int thickness) {
-    this->drawRect(rect.x, rect.y, rect.w, rect.h, color, thickness);
-}
-
-
-void Surface::fillRect(int x0, int y0, int w, int h, const Color &color) {
-    x0 = std::max(0, x0);
-    y0 = std::max(0, y0);
-
-    int x1 = std::min((x0 + w), width);
-    int y1 = std::min((y0 + h), height);
-
-    for (int y=y0; y<y1; y++) {
-        Color* rowStart = &m_data[y*width + x0];
-        std::fill(rowStart, rowStart + (x1 - x0), color);
-    }
-}
-
-void Surface::fillRect(const Vec3 &pos_vec, const Vec3 &size_vec, const Color &color) {
-    this->fillRect(pos_vec.x, pos_vec.y, size_vec.x, size_vec.y, color);
-}
-
-void Surface::fillRect(const Rect &rect, const Color &color) {
-    this->fillRect(rect.x, rect.y, rect.w, rect.h, color);
-}
-
-
-// Triangles
-void Surface::drawTris(int x0, int y0, int x1, int y1, int x2, int y2, const Color &color, int thickness) {
-    this->drawLine(x0, y0, x1, y1,  color, thickness);
-    this->drawLine(x1, y1, x2, y2,  color, thickness);
-    this->drawLine(x0, y0, x2, y2,  color, thickness);
-}
-
-void Surface::drawTris(const Vec3 &v1, const Vec3 &v2, const Vec3 &v3, const Color &color, int thickness) {
-    this->drawTris(v1.x,  v1.y,  v2.x,  v2.y,  v3.x, v3.y, color, thickness);
-}
-
-void Surface::drawTris(const Tris &tris, const Color &color, int thickness) {
-    this->drawTris( tris.x0, tris.y0, tris.x1, tris.y1, tris.x2, tris.y2, color, thickness);    
-}
-
-
-void Surface::fillTris(int x0, int y0, int x1, int y1, int x2, int y2, const Color &color) {
-    if ((x0 == x1 && y0 == y1) || (x0 == x2 && y0 == y2) || (x1 == x2 && y1 == y2)) {
-        return;
-    }
-
-    // ScanLine Approach
-    if (y0 > y1) { std::swap(x0, x1); std::swap(y0, y1); }
-    if (y0 > y2) { std::swap(x0, x2); std::swap(y0, y2); }
-    if (y1 > y2) { std::swap(x1, x2); std::swap(y1, y2); }
-
-    float invslope1 = (x1 - x0) / static_cast<float>(y1 - y0);
-    float invslope2 = (x2 - x0) / static_cast<float>(y2 - y0);
-
-    float curx1 = x0;
-    float curx2 = x0;
-
-    for (int y = y0; y < y1; y++) {
-        this->drawLine(static_cast<int>(curx1), y, static_cast<int>(curx2), y, color, 1);
-        curx1 += invslope1;
-        curx2 += invslope2;
-    }
-
-    invslope1 = (x2 - x1) / static_cast<float>(y2 - y1);
-    curx1 = x1;
-
-    for (int y = y1; y <= y2; y++) {
-        this->drawLine(static_cast<int>(curx1), y, static_cast<int>(curx2), y, color, 1);
-        curx1 += invslope1;
-        curx2 += invslope2;
-    }
-}
-
-void Surface::fillTris(const Vec3 &v1, const Vec3 &v2, const Vec3 &v3, const Color &color) {
-    this->fillTris(v1.x,  v1.y,  v2.x,  v2.y,  v3.x, v3.y, color);
-}
-
-void Surface::fillTris(const Tris &tris, const Color &color) {
-    this->fillTris(tris.x0,  tris.y0,  tris.x1,  tris.y1,  tris.x2, tris.y2, color);
 }
 
 
 // Lines
+
+// _DRAW_LINE(int x0, int y0, int x1, int y1, const Color &color, int lineWidth);
+#define _DRAW_LINE(x0, y0, x1, y1, color, lineWidth) {      \
+    int startX = x0;                                        \
+    int startY = y0;                                        \
+    int endX = x1;                                          \
+    int endY = y1;                                          \
+                                                            \
+    int dx = abs(endX - startX);                            \
+    int dy = abs(endY - startY);                            \
+                                                            \
+    if (dx == 0 && dy == 0) {                               \
+        _SET_SURF_AT(startX, startY, color);                \
+        return;                                             \
+    }                                                       \
+                                                            \
+    int sx = (startX < endX) ? 1 : -1;                      \
+    int sy = (startY < endY) ? 1 : -1;                      \
+    int err = dx - dy;                                      \
+                                                            \
+    for (int i = 0; i < lineWidth; i++) {                   \
+        int x = startX;                                     \
+        int y = startY;                                     \
+                                                            \
+        while (x != endX || y != endY) {                    \
+            _SET_SURF_AT(x, y, color);                      \
+                                                            \
+            int err2 = 2 * err;                             \
+            if (err2 > -dy) {                               \
+                err -= dy;                                  \
+                x += sx;                                    \
+            }                                               \
+            if (err2 < dx) {                                \
+                err += dx;                                  \
+                y += sy;                                    \
+            }                                               \
+        }                                                   \
+                                                            \
+        _SET_SURF_AT(endX, endY, color);                    \
+                                                            \
+        startX += sy;                                       \
+        endX += sy;                                         \
+        startY -= sx;                                       \
+        endY -= sx;                                         \
+    }                                                       \
+}
+
 void Surface::drawLine(int x0, int y0, int x1, int y1, const Color &color, int lineWidth) {
-    int dx = abs(x1 - x0);
-    int dy = abs(y1 - y0);
-
-    if (dx == 0 && dy == 0) {
-        this->set_at(x0, y0, color);  // Single point
-        return;
-    }
-
-    int sx = (x0 < x1) ? 1 : -1;
-    int sy = (y0 < y1) ? 1 : -1;
-    int err = dx - dy;
-
-    // Iterate for each line in the line width
-    for (int i = 0; i < lineWidth; i++) {
-        int x = x0;
-        int y = y0;
-
-        while (x != x1 || y != y1) {
-            this->set_at(x, y, color);
-
-            int err2 = 2 * err;
-            if (err2 > -dy) {
-                err -= dy;
-                x += sx;
-            }
-            if (err2 < dx) {
-                err += dx;
-                y += sy;
-            }
-        }
-
-        // Set the final point to the specified color
-        this->set_at(x1, y1, color);
-
-        // Offset the start and end points for the next line
-        x0 += sy;
-        x1 += sy;
-        y0 -= sx;
-        y1 -= sx;
-    }
+    _DRAW_LINE(x0,y0, x1,y1, color, lineWidth);
 }
 
 void Surface::drawLine(const Vec3 &v1, const Vec3 &v2, const Color &color, int lineWidth) {
-    this->drawLine(v1.x, v1.y, v2.x, v2.y, color, lineWidth);
+    const int &x0 = v1.x;
+    const int &y0 = v1.y;
+    const int &x1 = v2.x;
+    const int &y1 = v2.y;
+
+    _DRAW_LINE(x0,y0, x1,y1, color, lineWidth);
 }
 
 void Surface::drawLine(const Line &line, const Color &color, int lineWidth) {
-    this->drawLine(line.x0, line.y0, line.x1, line.y1, color, lineWidth);
+    const int &x0 = line.x0;
+    const int &y0 = line.y0;
+    const int &x1 = line.x1;
+    const int &y1 = line.y1;
+
+    _DRAW_LINE(x0,y0, x1,y1, color, lineWidth);
+}
+
+
+// Circles
+
+// _DRAW_CIRCLE(int x, int y, int r, const Color &color, int thickness)
+#define _DRAW_CIRCLE(x0, y0, r, color, thickness){          \
+    if ( (r < 1) || (thickness < 1) ) return;               \
+                                                            \
+    int y_st = std::max(0, std::min( surfHeight, y0 - r));  \
+    int y_en = std::max(0, std::min( surfHeight, y0+r+1 )); \
+    int x_st = std::max(0, std::min( surfWidth,  x0 - r));  \
+    int x_en = std::max(0, std::min( surfWidth,  x0+r+1 )); \
+                                                            \
+    int r_sq = r*r + 1;                                     \
+    int rt_sq = (r-thickness)*(r-thickness);                \
+                                                            \
+    int d_sq;                                               \
+                                                            \
+    for (int y=y_st; y<y_en; y++) {                         \
+        for (int x=x_st; x<x_en; x++) {                     \
+                                                            \
+            d_sq = (x-x0)*(x-x0) + (y-y0)*(y-y0);           \
+            if ( (d_sq>rt_sq)  && (d_sq<r_sq) ) {           \
+                _SET_SURF_AT(x, y, color);                  \
+            }                                               \
+        }                                                   \
+    }                                                       \
+}                                                           \
+
+void Surface::drawCircle(int x0, int y0, int r, const Color &color, int thickness) {
+    _DRAW_CIRCLE(x0, y0, r, color, thickness);
+}
+
+void Surface::drawCircle(const Vec3 &pos_vec, int r, const Color &color, int thickness) {
+    const int &x0 = pos_vec.x;
+    const int &y0 = pos_vec.y;
+
+    _DRAW_CIRCLE(x0, y0, r, color, thickness);
+}
+
+void Surface::drawCircle(const Circle &circle, const Color &color, int thickness) {
+    const int &x0 = circle.x;
+    const int &y0 = circle.y;
+    const int &r = circle.r;
+
+    _DRAW_CIRCLE(x0, y0, r, color, thickness);
+}
+
+
+// _FILL_CIRCLE(int x0, int y0, int r, const Color &color)
+#define _FILL_CIRCLE(x0, y0, r, color){                       \
+    if ( r < 1 )  return;                                     \
+                                                              \
+    int y_st = std::max(0, std::min( surfHeight, y0 - r));    \
+    int y_en = std::max(0, std::min( surfHeight, y0+r+1 ));   \
+    int x_st = std::max(0, std::min( surfWidth,  x0 - r));    \
+    int x_en = std::max(0, std::min( surfWidth,  x0+r+1 ));   \
+                                                              \
+    int r_sq = r*r + 1;                                       \
+    int d_sq;                                                 \
+                                                              \
+    for (int y=y_st; y<y_en; y++) {                           \
+        for (int x=x_st; x<x_en; x++) {                       \
+            d_sq = (x-x0)*(x-x0) + (y-y0)*(y-y0);             \
+            if ( d_sq < r_sq ) {                              \
+                _SET_SURF_AT( x, y, color);                   \
+            }                                                 \
+        }                                                     \
+    }                                                         \
+}                                                             \
+
+void Surface::fillCircle(int x0, int y0, int r, const Color &color) {
+    _FILL_CIRCLE(x0, y0, r, color);
+}
+
+void Surface::fillCircle(const Vec3 &pos_vec, int r, const Color &color) {    
+    const int &x0 = pos_vec.x;
+    const int &y0 = pos_vec.y;
+
+    _FILL_CIRCLE(x0, y0, r, color);
+}
+
+void Surface::fillCircle(const Circle &circle, const Color &color) {
+    const int &x0 = circle.x;
+    const int &y0 = circle.y;
+    const int &r  = circle.r;
+
+    _FILL_CIRCLE(x0, y0, r, color);
+}
+
+
+// Rectangles
+
+// _DRAW_RECT(int x0, int y0, int w, int h, const Color &color, int thickness)
+#define _DRAW_RECT(x0, y0, w, h, color, thickness) {            \
+    this->drawLine(x0, y0, x0+w, y0, color, thickness);         \
+    this->drawLine(x0, (y0+h), x0+w, (y0+h), color, thickness); \
+    this->drawLine(x0, y0, x0, (y0+h), color, thickness);       \
+    this->drawLine(x0+w, y0, x0+w, y0+h, color, thickness);     \
+}                                                               \
+
+void Surface::drawRect(int x0, int y0, int w, int h, const Color &color, int thickness) {
+    _DRAW_RECT(x0,y0, w,h, color, thickness);
+}
+
+void Surface::drawRect(const Vec3 &pos_vec, const Vec3 &size_vec, const Color &color, int thickness) {
+    const int &x0 = pos_vec.x;
+    const int &y0 = pos_vec.y;
+    const int &w = size_vec.x;
+    const int &h = size_vec.x;
+
+    _DRAW_RECT(x0,y0, w,h, color, thickness);
+}
+
+void Surface::drawRect(const Rect &rect, const Color &color, int thickness) {
+    const int &x0 = rect.x;
+    const int &y0 = rect.y;
+    const int &w = rect.w;
+    const int &h = rect.h;
+
+    _DRAW_RECT(x0,y0, w,h, color, thickness);
+}
+
+
+// _FILL_RECT(int x0, int y0, int w, int h, const Color &color)
+#define _FILL_RECT(x0, y0, w, h, color) {     \
+    int xSt = std::max(0, x0);                \
+    int ySt = std::max(0, y0);                \
+                                              \
+    int xEn = std::min(surfWidth, xSt+w);     \
+    int yEn = std::min(surfHeight, ySt+h);    \
+                                              \
+    for (int y=ySt; y<yEn; y++) {             \
+        for (int x=xSt; x<xEn; x++) {         \
+            _SET_SURF_AT(x,y,color);          \
+        }                                     \
+    }                                         \
+}                                             \
+
+void Surface::fillRect(int x0, int y0, int w, int h, const Color &color) {
+    _FILL_RECT(x0,y0, w,h, color);
+}
+
+void Surface::fillRect(const Vec3 &pos_vec, const Vec3 &size_vec, const Color &color) {
+    const int x0 = pos_vec.x;
+    const int y0 = pos_vec.y;
+    const int w = size_vec.x;
+    const int h = size_vec.y;
+
+    _FILL_RECT(x0,y0, w,h, color);
+}
+
+void Surface::fillRect(const Rect &rect, const Color &color) {
+    const int x0 = rect.x;
+    const int y0 = rect.y;
+    const int w = rect.w;
+    const int h = rect.h;
+
+    _FILL_RECT(x0,y0, w,h, color);
+}
+
+
+// Triangles
+
+// _DRAW_TRIS(int x0, int y0, int x1, int y1, int x2, int y2, const Color &color, int thickness)
+#define _DRAW_TRIS(x0,y0, x1,y1, x2,y2, color, thickness) { \
+    this->drawLine(x0, y0, x1, y1, color, thickness);       \
+    this->drawLine(x1, y1, x2, y2, color, thickness);       \
+    this->drawLine(x0, y0, x2, y2, color, thickness);       \
+}                                                           \
+
+void Surface::drawTris(int x0, int y0, int x1, int y1, int x2, int y2, const Color &color, int thickness) {
+    _DRAW_TRIS(x0,y0, x1,y1, x2,y2, color, thickness);
+}
+
+void Surface::drawTris(const Vec3 &v1, const Vec3 &v2, const Vec3 &v3, const Color &color, int thickness) {
+    const int &x0 = v1.x;
+    const int &y0 = v1.y;
+    const int &x1 = v2.x;
+    const int &y1 = v2.y;
+    const int &x2 = v3.x;
+    const int &y2 = v3.y;
+
+    _DRAW_TRIS(x0,y0, x1,y1, x2,y2, color, thickness);
+}
+
+void Surface::drawTris(const Tris &tris, const Color &color, int thickness) {
+    const int &x0 = tris.x0;
+    const int &y0 = tris.y0;
+    const int &x1 = tris.x1;
+    const int &y1 = tris.y1;
+    const int &x2 = tris.x2;
+    const int &y2 = tris.y2;
+
+    _DRAW_TRIS(x0,y0, x1,y1, x2,y2, color, thickness);
+}
+
+
+// _FILL_TRIS( int x0, int y0, int x1, int y1, int x2, int y2, const Color &color )
+#define _FILL_TRIS(x0,y0, x1,y1, x2,y2, color) {                                \
+    if ((x0==x1 && y0==y1) || (x0==x2 && y0==y2) ||(x1==x2 && y1==y2)) return;  \
+                                                                                \
+    /* ScanLine Approach */                                                     \
+    if (y0>y1) { std::swap(x0, x1); std::swap(y0, y1); }                        \
+    if (y0>y2) { std::swap(x0, x2); std::swap(y0, y2); }                        \
+    if (y1>y2) { std::swap(x1, x2); std::swap(y1, y2); }                        \
+                                                                                \
+    float invslope1 = (x1-x0) / float(y1-y0);                                   \
+    float invslope2 = (x2-x0) / float(y2-y0);                                   \
+                                                                                \
+    float curx1 = x0;                                                           \
+    float curx2 = x0;                                                           \
+                                                                                \
+    for (int y=y0; y<y1; y++) {                                                 \
+        this->drawLine(int(curx1), y, int(curx2), y, color, 1);                 \
+        curx1 += invslope1;                                                     \
+        curx2 += invslope2;                                                     \
+    }                                                                           \
+                                                                                \
+    invslope1 = (x2-x1) / float(y2-y1);                                         \
+    curx1 = x1;                                                                 \
+                                                                                \
+    for (int y=y1; y<=y2; y++) {                                                \
+        this->drawLine(int(curx1), y, int(curx2), y, color, 1);                 \
+        curx1 += invslope1;                                                     \
+        curx2 += invslope2;                                                     \
+    }                                                                           \
+}                                                                               \
+
+void Surface::fillTris(int x0, int y0, int x1, int y1, int x2, int y2, const Color &color) {
+    _FILL_TRIS(x0,y0, x1,y1, x2,y2, color);
+}
+
+void Surface::fillTris(const Vec3 &v1, const Vec3 &v2, const Vec3 &v3, const Color &color) {
+    int x0 = v1.x;
+    int y0 = v1.y;
+    int x1 = v2.x;
+    int y1 = v2.y;
+    int x2 = v3.x;
+    int y2 = v3.y;
+
+    _FILL_TRIS(x0,y0, x1,y1, x2,y2, color);
+}
+
+void Surface::fillTris(const Tris &tris, const Color &color) {
+    int x0 = tris.x0;
+    int y0 = tris.y0;
+    int x1 = tris.x1;
+    int y1 = tris.y1;
+    int x2 = tris.x2;
+    int y2 = tris.y2;
+
+    _FILL_TRIS(x0,y0, x1,y1, x2,y2, color);
 }

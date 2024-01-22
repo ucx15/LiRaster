@@ -11,13 +11,13 @@
 class Surface {
 
 	public:
-		int width;
-		int height;
-		int pixel_count;
-		float aspect_ratio;
+		int surfWidth;
+		int surfHeight;
+		int surfSize;
+		float surfAspectRatio;
 	
 	private:
-		Color *m_data;
+		Color *_surfData;
 
 
 	//Methods
@@ -33,17 +33,22 @@ class Surface {
 
 
 		// Saving
-		int save_float_buffer(const char *file_path);
-		int save_ppm(const char *file_path);
-		int save_png(const char *file_path);
+		int saveFloatBuffer(const char *file_path);
+		int savePPM(const char *file_path);
+		int savePNG(const char *file_path);
 		
 
 		// Drawing Methods
-		void set_at(int x, int y, const Color &color);
+		void setAt(int x, int y, const Color &color);
 		
 		void fill(const Color &color);
-		void fill_random();
-		
+		void fillNoise();
+
+
+		void drawLine(int x0, int y0, int x1, int y1, const Color &color, int lineWidth);
+		void drawLine(const Vec3 &v1, const Vec3 &v2, const Color &color, int lineWidth);
+		void drawLine(const Line &line, const Color &color, int lineWidth);
+
 
 		void drawCircle(int x0, int y0, int r, const Color &color, int thickness);
 		void drawCircle(const Vec3 &pos_vec, int r, const Color &color, int thickness);
@@ -70,11 +75,6 @@ class Surface {
 		void fillTris(int x0, int y0, int x1, int y1, int x2, int y2, const Color &color);
 		void fillTris(const Vec3 &v1, const Vec3 &v2, const Vec3 &v3, const Color &color);
 		void fillTris(const Tris &tris, const Color &color);
-
-
-		void drawLine(int x0, int y0, int x1, int y1, const Color &color, int lineWidth);
-		void drawLine(const Vec3 &v1, const Vec3 &v2, const Color &color, int lineWidth);
-		void drawLine(const Line &line, const Color &color, int lineWidth);
 
 
 	private:

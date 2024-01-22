@@ -96,27 +96,25 @@ void Engine::project() {
 	}
 }
 
-
 void Engine::rasterize() {
 	// Rendering Triangles from ss_points buffer
 	enSurface.fill(COLOR_BLACK);
 
-	Vec3 a,b,c;
-
-	for (int i=0; i<nPoints; i++) {
-		enSurface.fillCircle(ssPoints[i], 4, COLOR_RED);
-	}
-
+	// Drawing Triangles
 	for (int i=0; i<nTris*3; i+=3) {
-		a = ssPoints[ tris[i]   ];
-		b = ssPoints[ tris[i+1] ];
-		c = ssPoints[ tris[i+2] ];
-
+		Vec3 &a = ssPoints[ tris[i]   ];
+		Vec3 &b = ssPoints[ tris[i+1] ];
+		Vec3 &c = ssPoints[ tris[i+2] ];
+		
 		enSurface.fillTris(a,b,c, COLOR_BLUE);
 		enSurface.drawTris(a,b,c, COLOR_WHITE, 1);
 	}
-}
 
+	// Drawing Verticies
+	for (int i=0; i<nPoints; i++) {
+		enSurface.fillCircle(ssPoints[i], 4, COLOR_RED);
+	}
+}
 
 void Engine::render() {
 	// Copying data to SDL Surface
@@ -273,7 +271,7 @@ void Engine::pipeline() {
 	TIME_PT tPtSave1, tPtSave2; 
 	// Save the Surface
 	tPtSave1 = TIME_NOW();
-	enSurface.save_png("Out/img.png");
+	enSurface.savePNG("Out/img.png");
 	tPtSave2 = TIME_NOW();
 
 	uint64_t t_save_us   = TIME_DUR(tPtSave2, tPtSave1);
