@@ -15,20 +15,20 @@ Engine::~Engine() {
 
 void Engine::SDLSetup() {
     SDLWindow = SDL_CreateWindow("LiRaster", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, W, H, SDL_WINDOW_SHOWN);
-	if (SDLWindow == NULL) {
+	if ( !SDLWindow ) {
 		SDL_Log("SDL_CreateWindow creation failed: %s", SDL_GetError());
 		exit(EXIT_FAILURE);
 	}
 
     SDLRenderer =  SDL_CreateRenderer(SDLWindow, -1, SDL_RENDERER_ACCELERATED);
-	if (SDLRenderer == NULL) {
+	if ( !SDLRenderer ) {
 		SDL_Log("SDL_CreateRenderer creation failed: %s", SDL_GetError());
 		exit(EXIT_FAILURE);
 	}
 
-	SDLSurface = SDL_CreateRGBSurface(0, W, H, 32,0xFF000000, 0x00FF0000, 0x0000FF00, 0x000000FF );
-	if (SDLSurface == NULL) {
-		SDL_Log("SDL_CreateRGBSurface failed: %s", SDL_GetError());
+	SDLTexture = SDL_CreateTexture(SDLRenderer, SDL_PIXELFORMAT_RGBA8888, SDL_TEXTUREACCESS_STREAMING, W, H);
+	if ( !SDLTexture ) {
+		SDL_Log("SDL_CreateTexture failed: %s", SDL_GetError());
 		exit(EXIT_FAILURE);
 	}
 
@@ -47,10 +47,10 @@ void Engine::quit() {
 
 	delete[] enBuffer;
 
+	SDL_DestroyTexture(SDLTexture);
 	SDL_DestroyRenderer(SDLRenderer);
 	SDL_DestroyWindow(SDLWindow);
 	SDL_Quit();
-
 }
 
 
@@ -66,6 +66,7 @@ void Engine::handleEvents() {
 
 // Main Render Method
 void Engine::engineSetup() {
+	enTextureBuffer = new uint32_t[W*H];
 	enBuffer = new Color[W*H];
 	enSurface = Surface(enBuffer, W, H);
 
@@ -117,21 +118,20 @@ void Engine::rasterize() {
 }
 
 void Engine::render() {
-	// Copying data to SDL Surface
-	enSurface.toU32Surface((uint32_t*)SDLSurface->pixels);
+	// Copying data to 32 bit buffer
+	enSurface.toU32Surface(enTextureBuffer);
 
-	SDLTexture = SDL_CreateTextureFromSurface(SDLRenderer, SDLSurface);
-		
-		if (SDLTexture == NULL) {
-			SDL_Log("SDL_CreateTextureFromSurface failed: %s", SDL_GetError());
-			return;
-		}
+	// Copying data to VRAM
+	SDL_UpdateTexture(SDLTexture, NULL, enTextureBuffer, W*4);	
+	if ( !SDLTexture ) {
+		SDL_Log("SDL_CreateTextureFromSurface failed: %s", SDL_GetError());
+		return;
+	}
 
-		SDL_RenderClear(SDLRenderer);
-		SDL_RenderCopy(SDLRenderer, SDLTexture, NULL, NULL);
-		SDL_RenderPresent(SDLRenderer);
-
-	SDL_DestroyTexture(SDLTexture);
+	// Presenting to Display device
+	SDL_RenderClear(SDLRenderer);
+	SDL_RenderCopy(SDLRenderer, SDLTexture, NULL, NULL);
+	SDL_RenderPresent(SDLRenderer);
 }
 
 

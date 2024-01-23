@@ -13,15 +13,15 @@ class Engine {
 
 	private:
 		// SDL Stuff
-		SDL_Window *SDLWindow     = NULL;
-		SDL_Renderer *SDLRenderer = NULL;
-		SDL_Surface *SDLSurface   = NULL;
-		SDL_Texture *SDLTexture   = NULL;
+		SDL_Window *SDLWindow;
+		SDL_Renderer *SDLRenderer;
+		SDL_Texture *SDLTexture;
 		SDL_Event SDLEvent;
 
 		// Engine Stuff
+		uint32_t *enTextureBuffer;  // intermediate Buffer for writing to SDLTexture
+		Color *enBuffer;            // Array of pixels
 		Surface enSurface;
-		Color *enBuffer;  // Array of pixels
 
 		int nPoints;
 		int nTris;
