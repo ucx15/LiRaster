@@ -23,12 +23,12 @@ class Engine {
 		Color *enBuffer;            // Array of pixels
 		Surface enSurface;
 
-		int nPoints;
-		int nTris;
+		int enVxCount;
+		int enTriCount;
 
-		Vec3 *points;
-		Vec3 *ssPoints;
-		int *tris;
+		Vec3 *enVerticies;
+		Vec3 *enSSVerticies;
+		int *enTriIndex;
 
 		// Rendering Stuff
 		bool isRunning;
@@ -47,6 +47,7 @@ class Engine {
 		void handleEvents();
 
 		void engineSetup();
+		void loadScene();
 		void project();
 		void render();
 		void rasterize();

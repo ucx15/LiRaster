@@ -1,6 +1,8 @@
 #include "SDL.h"
 #include "engine.hpp"
 #include "settings.hpp"
+
+// #define TRACK_MEMORY    // Can be used to Track Allocated and Deallocated memory 
 #include "utils.hpp"
 
 
@@ -41,11 +43,12 @@ void Engine::SDLSetup() {
 
 void Engine::quit() {
 	// Cleanup
-	delete[] points;
-	delete[] ssPoints;
-	delete[] tris;
+	MEM_DEALLOC(enTriIndex,      3*enTriCount);
+	MEM_DEALLOC(enSSVerticies,   enVxCount);
+	MEM_DEALLOC(enVerticies,     enVxCount);
+	MEM_DEALLOC(enBuffer, 		 W*H);
+	MEM_DEALLOC(enTextureBuffer, W*H);
 
-	delete[] enBuffer;
 
 	SDL_DestroyTexture(SDLTexture);
 	SDL_DestroyRenderer(SDLRenderer);
@@ -63,13 +66,12 @@ void Engine::handleEvents() {
 }
 
 
-
 // Main Render Method
 void Engine::engineSetup() {
-	enTextureBuffer = new uint32_t[W*H];
-	enBuffer = new Color[W*H];
-	enSurface = Surface(enBuffer, W, H);
+	MEM_ALLOC(enTextureBuffer, uint32_t, W*H);
+	MEM_ALLOC(enBuffer, Color,W*H);	
 
+	enSurface = Surface(enBuffer, W, H);
 	projMat = glm::perspective(glm::radians(AOV), ASR, EPSILON, FAR_CLIP);
 
 	isRunning = true;
@@ -77,9 +79,9 @@ void Engine::engineSetup() {
 
 
 void Engine::project() {
-	for (int i=0; i<nPoints; i++) {
-		Vec3 &in = points[i];     // Input Vector
-		Vec3 &out = ssPoints[i];  // Output Vector
+	for (int i=0; i<enVxCount; i++) {
+		Vec3 &in = enVerticies[i];     // Input Vector
+		Vec3 &out = enSSVerticies[i];  // Output Vector
 
 		Vec4 intr = projMat * Vec4(in, 1.0f);
 
@@ -102,18 +104,18 @@ void Engine::rasterize() {
 	enSurface.fill(COLOR_BLACK);
 
 	// Drawing Triangles
-	for (int i=0; i<nTris*3; i+=3) {
-		Vec3 &a = ssPoints[ tris[i]   ];
-		Vec3 &b = ssPoints[ tris[i+1] ];
-		Vec3 &c = ssPoints[ tris[i+2] ];
+	for (int i=0; i<enTriCount*3; i+=3) {
+		Vec3 &a = enSSVerticies[ enTriIndex[i]   ];
+		Vec3 &b = enSSVerticies[ enTriIndex[i+1] ];
+		Vec3 &c = enSSVerticies[ enTriIndex[i+2] ];
 		
 		enSurface.fillTris(a,b,c, COLOR_BLUE);
 		enSurface.drawTris(a,b,c, COLOR_WHITE, 1);
 	}
 
 	// Drawing Verticies
-	for (int i=0; i<nPoints; i++) {
-		enSurface.fillCircle(ssPoints[i], 4, COLOR_RED);
+	for (int i=0; i<enVxCount; i++) {
+		enSurface.fillCircle(enSSVerticies[i], 4, COLOR_RED);
 	}
 }
 
@@ -134,84 +136,92 @@ void Engine::render() {
 	SDL_RenderPresent(SDLRenderer);
 }
 
+void Engine::loadScene() {
+	enVxCount = 8;
+	enTriCount = 12;
 
-void Engine::pipeline() {
-	this->engineSetup();
-
-	nPoints = 8;
-	nTris   = 12;
-
-	points    = new Vec3[nPoints];
-	ssPoints = new Vec3[nPoints];
-	tris      = new int[3*nTris];
+	MEM_ALLOC(enVerticies, Vec3, enVxCount);
+	MEM_ALLOC(enSSVerticies, Vec3, enVxCount);
+	MEM_ALLOC(enTriIndex, int, 3*enTriCount);
 
 	Vec3 pos = Vec3(0, 0, -1.f);
 	float rad = .125f;
 
 	// Scene Setup
 	{
-		points[0] = Vec3( pos.x-rad, pos.y+rad, pos.z+rad); 
-		points[1] = Vec3( pos.x-rad, pos.y-rad, pos.z+rad); 
-		points[2] = Vec3( pos.x+rad, pos.y-rad, pos.z+rad); 
-		points[3] = Vec3( pos.x+rad, pos.y+rad, pos.z+rad);
+		enVerticies[0] = Vec3( pos.x-rad, pos.y+rad, pos.z+rad); 
+		enVerticies[1] = Vec3( pos.x-rad, pos.y-rad, pos.z+rad); 
+		enVerticies[2] = Vec3( pos.x+rad, pos.y-rad, pos.z+rad); 
+		enVerticies[3] = Vec3( pos.x+rad, pos.y+rad, pos.z+rad);
 	
-		points[4] = Vec3( pos.x-rad, pos.y+rad, pos.z-rad); 
-		points[5] = Vec3( pos.x-rad, pos.y-rad, pos.z-rad); 
-		points[6] = Vec3( pos.x+rad, pos.y-rad, pos.z-rad); 
-		points[7] = Vec3( pos.x+rad, pos.y+rad, pos.z-rad); 
+		enVerticies[4] = Vec3( pos.x-rad, pos.y+rad, pos.z-rad); 
+		enVerticies[5] = Vec3( pos.x-rad, pos.y-rad, pos.z-rad); 
+		enVerticies[6] = Vec3( pos.x+rad, pos.y-rad, pos.z-rad); 
+		enVerticies[7] = Vec3( pos.x+rad, pos.y+rad, pos.z-rad); 
 	}
 
 	// Triangles sequence
 	{
 		// Back
-		tris[0] = 7;
-		tris[1] = 6;
-		tris[2] = 5;
-		tris[3] = 7;
-		tris[4] = 5;
-		tris[5] = 4;
+		enTriIndex[0] = 7;
+		enTriIndex[1] = 6;
+		enTriIndex[2] = 5;
+		enTriIndex[3] = 7;
+		enTriIndex[4] = 5;
+		enTriIndex[5] = 4;
 
 		// Front
-		tris[6] = 0;
-		tris[7] = 1;
-		tris[8] = 2;
-		tris[9] = 0;
-		tris[10] = 2;
-		tris[11] = 3;
+		enTriIndex[6] = 0;
+		enTriIndex[7] = 1;
+		enTriIndex[8] = 2;
+		enTriIndex[9] = 0;
+		enTriIndex[10] = 2;
+		enTriIndex[11] = 3;
 
 		// Top
-		tris[12] = 4;
-		tris[13] = 0;
-		tris[14] = 3;
-		tris[15] = 4;
-		tris[16] = 3;
-		tris[17] = 7;
+		enTriIndex[12] = 4;
+		enTriIndex[13] = 0;
+		enTriIndex[14] = 3;
+		enTriIndex[15] = 4;
+		enTriIndex[16] = 3;
+		enTriIndex[17] = 7;
 
 		// Bottom
-		tris[18] = 1;
-		tris[19] = 5;
-		tris[20] = 6;
-		tris[21] = 1;
-		tris[22] = 6;
-		tris[23] = 2;
+		enTriIndex[18] = 1;
+		enTriIndex[19] = 5;
+		enTriIndex[20] = 6;
+		enTriIndex[21] = 1;
+		enTriIndex[22] = 6;
+		enTriIndex[23] = 2;
 
 
 		// Left
-		tris[24] = 4;
-		tris[25] = 5;
-		tris[26] = 1;
-		tris[27] = 4;
-		tris[28] = 1;
-		tris[29] = 0;
+		enTriIndex[24] = 4;
+		enTriIndex[25] = 5;
+		enTriIndex[26] = 1;
+		enTriIndex[27] = 4;
+		enTriIndex[28] = 1;
+		enTriIndex[29] = 0;
 
 		// Right
-		tris[30] = 3;
-		tris[31] = 2;
-		tris[32] = 6;
-		tris[33] = 3;
-		tris[34] = 6;
-		tris[35] = 7;
+		enTriIndex[30] = 3;
+		enTriIndex[31] = 2;
+		enTriIndex[32] = 6;
+		enTriIndex[33] = 3;
+		enTriIndex[34] = 6;
+		enTriIndex[35] = 7;
 	}
+}
+
+
+void Engine::pipeline() {
+	// Engine Class Startup code
+	this->engineSetup();
+
+
+	// Loading Scene into Memory
+	this->loadScene();
+
 
 	TIME_PT tPtProject1, tPtProject2, tPtRaster1, tPtRaster2;
 
@@ -228,7 +238,7 @@ void Engine::pipeline() {
 	// Logging
 	auto tProjectuS = TIME_DUR(tPtProject2, tPtProject1);
 	auto tRasteruS  = TIME_DUR(tPtRaster2, tPtRaster1);
-	std::cout << "Project\t " << tProjectuS << " us\tRaster\t " << tRasteruS << " us\n";
+	std::cout << "\nProject\t " << tProjectuS << " us\tRaster\t " << tRasteruS << " us\n";
 
 
 	float lastLogTime = 0.f;
@@ -275,5 +285,5 @@ void Engine::pipeline() {
 	tPtSave2 = TIME_NOW();
 
 	uint64_t t_save_us   = TIME_DUR(tPtSave2, tPtSave1);
-	std::cout << "\nSave\t " << t_save_us / 1000.f << " ms\n";
+	std::cout << "\nSave\t " << t_save_us / 1000.f << " ms\n\n";
 }

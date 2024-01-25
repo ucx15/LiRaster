@@ -25,6 +25,33 @@ const Color COLOR_PURPLE(0.2f, 0.2f, 0.9f);
 
 
 // Macro Expressions
+
+#ifndef TRACK_MEMORY
+	
+	#define MEM_ALLOC(ptr, dType, N) {ptr = new dType[(N)];}
+	#define MEM_DEALLOC(ptr, N) delete[] ptr;
+
+#else
+	static uint64_t memoryAllocated = 0;  // in Bytes
+
+	// Should NOT be used Explicitly!
+	#define _LOG_MEM_USING(t) std::cout << "Mem" << t << '\t' << memoryAllocated/1024.f << " kB\n"
+
+	#define MEM_ALLOC(ptr, dType, N) {			\
+		ptr = new dType[(N)];					\
+		_LOG_MEM_USING("++");					\
+		memoryAllocated += sizeof(dType)*(N);	\
+	}											\
+
+	#define MEM_DEALLOC(ptr, N) {				\
+		delete[] ptr;							\
+		memoryAllocated -= sizeof(*ptr)*(N);	\
+		_LOG_MEM_USING("--");					\
+	}											\
+
+#endif
+
+
 // #define _CLOCK_TYPE steady_clock
 #define _CLOCK_TYPE high_resolution_clock
 
@@ -36,7 +63,6 @@ const Color COLOR_PURPLE(0.2f, 0.2f, 0.9f);
 #define LOG_VEC3(v) std::cout << (v).x << ' ' << (v).y << ' ' << (v).z << '\n';
 #define LOG_VEC4(v) std::cout << (v).x << ' ' << (v).y << ' ' << (v).z << ' ' << (v).w << '\n';
 #define LOG_COLOR(c) std::cout << (c).r << ' ' << (c).g << ' ' << (c).b << '\n';
-
 
 #define randf() ((float) pcg32_random_r() / UINT32_MAX)
 
@@ -55,10 +81,3 @@ const Color COLOR_PURPLE(0.2f, 0.2f, 0.9f);
 // Functions
 uint32_t pcg32_random_r();
 Vec3 randVec3onSphere(Vec3 normal);
-
-
-// Structs
-struct pcg_random_t{
-	uint64_t state = 100;
-	uint64_t inc = 100;
-};
