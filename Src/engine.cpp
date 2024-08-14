@@ -6,15 +6,24 @@
 #include "utils.hpp"
 
 
-// Cosntructors and Destructors
+/*
+Engine Class handles SDL Setup and Deinitialization itself
+while RenderEngine Setup and destruction is explicitly 
+handled by Engine::pipeline()
+*/
+
+
+// Constructors and Destructors
 Engine::Engine() {
 	this->SDLSetup();
 }
 
 Engine::~Engine() {
-	this->quit();
+	this->SDLDestroy();
 }
 
+
+// SDL Methods (Window Management & Event Handling)
 void Engine::SDLSetup() {
     SDLWindow = SDL_CreateWindow("LiRaster", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, W, H, SDL_WINDOW_SHOWN);
 	if ( !SDLWindow ) {
@@ -40,22 +49,12 @@ void Engine::SDLSetup() {
 	}
 }
 
-
-void Engine::quit() {
-	// Cleanup
-	MEM_DEALLOC(enTriIndex,      3*enTriCount);
-	MEM_DEALLOC(enSSVerticies,   enVxCount);
-	MEM_DEALLOC(enVerticies,     enVxCount);
-	MEM_DEALLOC(enBuffer, 		 W*H);
-	MEM_DEALLOC(enTextureBuffer, W*H);
-
-
+void Engine::SDLDestroy() {
 	SDL_DestroyTexture(SDLTexture);
 	SDL_DestroyRenderer(SDLRenderer);
 	SDL_DestroyWindow(SDLWindow);
 	SDL_Quit();
 }
-
 
 void Engine::handleEvents() {
 	while (SDL_PollEvent(&SDLEvent)) {
@@ -66,7 +65,7 @@ void Engine::handleEvents() {
 }
 
 
-// Main Render Method
+// Engine Methods (Setup, Destruction and Scene Loading)
 void Engine::engineSetup() {
 	MEM_ALLOC(enTextureBuffer, uint32_t, W*H);
 	MEM_ALLOC(enBuffer, Color,W*H);	
@@ -77,63 +76,12 @@ void Engine::engineSetup() {
 	isRunning = true;
 }
 
-
-void Engine::project() {
-	for (int i=0; i<enVxCount; i++) {
-		Vec3 &in = enVerticies[i];     // Input Vector
-		Vec3 &out = enSSVerticies[i];  // Output Vector
-
-		Vec4 intr = projMat * Vec4(in, 1.0f);
-
-        // Normalize intr coordinates
-        if (intr.w != 0) {
-            out.x = intr.x/intr.w;
-            out.y = intr.y/intr.w;
-            out.z = intr.z/intr.w;
-        }
-
-		// Normal Space to Screen Space conversion
-		// (-1, 1)  -- x2 ->  (0, 2)  -- /2 ->  (0, 1)  -- xS ->  (0, S)
-		out.x = W * (1.f+out.x)/2.f;
-		out.y = H * (1.f-out.y)/2.f;
-	}
-}
-
-void Engine::rasterize() {
-	// Rendering Triangles from ss_points buffer
-	enSurface.fill(COLOR_BLACK);
-
-	// Drawing Triangles
-	for (int i=0; i<enTriCount*3; i+=3) {
-		Vec3 &a = enSSVerticies[ enTriIndex[i]   ];
-		Vec3 &b = enSSVerticies[ enTriIndex[i+1] ];
-		Vec3 &c = enSSVerticies[ enTriIndex[i+2] ];
-		
-		enSurface.fillTris(a,b,c, COLOR_BLUE);
-		enSurface.drawTris(a,b,c, COLOR_WHITE, 1);
-	}
-
-	// Drawing Verticies
-	for (int i=0; i<enVxCount; i++) {
-		enSurface.fillCircle(enSSVerticies[i], 4, COLOR_RED);
-	}
-}
-
-void Engine::render() {
-	// Copying data to 32 bit buffer
-	enSurface.toU32Surface(enTextureBuffer);
-
-	// Copying data to VRAM
-	SDL_UpdateTexture(SDLTexture, NULL, enTextureBuffer, W*4);	
-	if ( !SDLTexture ) {
-		SDL_Log("SDL_CreateTextureFromSurface failed: %s", SDL_GetError());
-		return;
-	}
-
-	// Presenting to Display device
-	SDL_RenderClear(SDLRenderer);
-	SDL_RenderCopy(SDLRenderer, SDLTexture, NULL, NULL);
-	SDL_RenderPresent(SDLRenderer);
+void Engine::engineDestroy() {
+	MEM_DEALLOC(enTriIndex,      3*enTriCount);
+	MEM_DEALLOC(enSSVerticies,   enVxCount);
+	MEM_DEALLOC(enVerticies,     enVxCount);
+	MEM_DEALLOC(enBuffer, 		 W*H);
+	MEM_DEALLOC(enTextureBuffer, W*H);
 }
 
 void Engine::loadScene() {
@@ -214,10 +162,69 @@ void Engine::loadScene() {
 }
 
 
+// Rendering Methods
+void Engine::project() {
+	for (int i=0; i<enVxCount; i++) {
+		Vec3 &in = enVerticies[i];     // Input Vector
+		Vec3 &out = enSSVerticies[i];  // Output Vector
+
+		Vec4 intr = projMat * Vec4(in, 1.0f);
+
+        // Normalize intr coordinates
+        if (intr.w != 0) {
+            out.x = intr.x/intr.w;
+            out.y = intr.y/intr.w;
+            out.z = intr.z/intr.w;
+        }
+
+		// Normal Space to Screen Space conversion
+		// (-1, 1)  -- x2 ->  (0, 2)  -- /2 ->  (0, 1)  -- xS ->  (0, S)
+		out.x = W * (1.f+out.x)/2.f;
+		out.y = H * (1.f-out.y)/2.f;
+	}
+}
+
+void Engine::rasterize() {
+	// Rendering Triangles from ss_points buffer
+	enSurface.fill(COLOR_BLACK);
+
+	// Drawing Triangles
+	for (int i=0; i<enTriCount*3; i+=3) {
+		Vec3 &a = enSSVerticies[ enTriIndex[i]   ];
+		Vec3 &b = enSSVerticies[ enTriIndex[i+1] ];
+		Vec3 &c = enSSVerticies[ enTriIndex[i+2] ];
+		
+		enSurface.fillTris(a,b,c, COLOR_BLUE);
+		enSurface.drawTris(a,b,c, COLOR_WHITE, 1);
+	}
+
+	// Drawing Verticies
+	for (int i=0; i<enVxCount; i++) {
+		enSurface.fillCircle(enSSVerticies[i], 4, COLOR_RED);
+	}
+}
+
+void Engine::render() {
+	// Copying data to 32 bit buffer
+	enSurface.toU32Surface(enTextureBuffer);
+
+	// Copying data to VRAM
+	SDL_UpdateTexture(SDLTexture, NULL, enTextureBuffer, W*4);	
+	if ( !SDLTexture ) {
+		SDL_Log("SDL_CreateTextureFromSurface failed: %s", SDL_GetError());
+		return;
+	}
+
+	// Presenting to Display device
+	SDL_RenderClear(SDLRenderer);
+	SDL_RenderCopy(SDLRenderer, SDLTexture, NULL, NULL);
+	SDL_RenderPresent(SDLRenderer);
+}
+
+
 void Engine::pipeline() {
 	// Engine Class Startup code
 	this->engineSetup();
-
 
 	// Loading Scene into Memory
 	this->loadScene();
@@ -286,4 +293,8 @@ void Engine::pipeline() {
 
 	uint64_t t_save_us   = TIME_DUR(tPtSave2, tPtSave1);
 	std::cout << "\nSave\t " << t_save_us / 1000.f << " ms\n\n";
+	
+
+	// Engine Class Destructor Code
+	this->engineDestroy();
 }

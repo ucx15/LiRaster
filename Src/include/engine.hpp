@@ -43,10 +43,13 @@ class Engine {
 
 	private:
 		void SDLSetup();
-		void quit();
+		void SDLDestroy();
+
 		void handleEvents();
 
 		void engineSetup();
+		void engineDestroy();
+
 		void loadScene();
 		void project();
 		void render();
