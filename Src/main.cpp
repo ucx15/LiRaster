@@ -5,8 +5,8 @@ int main(int argc, char *argv[]) {
 	(void) argc;
 	(void) argv;
 
-	Engine Runner = Engine();
-	Runner.pipeline();
+	Engine LiRasterEngine = Engine();
+	LiRasterEngine.pipeline();
 
 	return EXIT_SUCCESS;
 }
