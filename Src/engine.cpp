@@ -2,13 +2,13 @@
 #include "engine.hpp"
 #include "settings.hpp"
 
-// #define TRACK_MEMORY    // Can be used to Track Allocated and Deallocated memory 
+// #define TRACK_MEMORY    // Can be used to Track Allocated and Deallocated memory
 #include "utils.hpp"
 
 
 /*
 Engine Class handles SDL Setup and Deinitialization itself
-while RenderEngine Setup and destruction is explicitly 
+while RenderEngine Setup and destruction is explicitly
 handled by Engine::pipeline()
 */
 
@@ -25,7 +25,12 @@ Engine::~Engine() {
 
 // SDL Methods (Window Management & Event Handling)
 void Engine::SDLSetup() {
-    SDLWindow = SDL_CreateWindow("LiRaster", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, W, H, SDL_WINDOW_SHOWN);
+	if(SDL_Init(SDL_INIT_EVERYTHING)) {
+		SDL_Log("SDL_Init failed: %s", SDL_GetError());
+		exit(EXIT_FAILURE);
+	}
+
+	SDLWindow = SDL_CreateWindow("LiRaster", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, W, H, SDL_WINDOW_SHOWN);
 	if ( !SDLWindow ) {
 		SDL_Log("SDL_CreateWindow creation failed: %s", SDL_GetError());
 		exit(EXIT_FAILURE);
@@ -40,11 +45,6 @@ void Engine::SDLSetup() {
 	SDLTexture = SDL_CreateTexture(SDLRenderer, SDL_PIXELFORMAT_RGBA8888, SDL_TEXTUREACCESS_STREAMING, W, H);
 	if ( !SDLTexture ) {
 		SDL_Log("SDL_CreateTexture failed: %s", SDL_GetError());
-		exit(EXIT_FAILURE);
-	}
-
-	if(SDL_Init(SDL_INIT_EVERYTHING)) {
-		SDL_Log("SDL_Init failed: %s", SDL_GetError());
 		exit(EXIT_FAILURE);
 	}
 }
@@ -68,7 +68,7 @@ void Engine::handleEvents() {
 // Engine Methods (Setup, Destruction and Scene Loading)
 void Engine::engineSetup() {
 	MEM_ALLOC(enTextureBuffer, uint32_t, W*H);
-	MEM_ALLOC(enBuffer, Color,W*H);	
+	MEM_ALLOC(enBuffer, Color,W*H);
 
 	enSurface = Surface(enBuffer, W, H);
 	projMat = glm::perspective(glm::radians(AOV), ASR, EPSILON, FAR_CLIP);
@@ -85,8 +85,8 @@ void Engine::engineDestroy() {
 }
 
 void Engine::loadScene() {
-	enVxCount = 8;
-	enTriCount = 12;
+	enVxCount = 12;
+	enTriCount = 14;
 
 	MEM_ALLOC(enVerticies, Vec3, enVxCount);
 	MEM_ALLOC(enSSVerticies, Vec3, enVxCount);
@@ -94,18 +94,24 @@ void Engine::loadScene() {
 
 	Vec3 pos = Vec3(0, 0, -1.f);
 	float rad = .125f;
+	float rad2 = .25f;
 
 	// Scene Setup
 	{
-		enVerticies[0] = Vec3( pos.x-rad, pos.y+rad, pos.z+rad); 
-		enVerticies[1] = Vec3( pos.x-rad, pos.y-rad, pos.z+rad); 
-		enVerticies[2] = Vec3( pos.x+rad, pos.y-rad, pos.z+rad); 
+		enVerticies[0] = Vec3( pos.x-rad, pos.y+rad, pos.z+rad);
+		enVerticies[1] = Vec3( pos.x-rad, pos.y-rad, pos.z+rad);
+		enVerticies[2] = Vec3( pos.x+rad, pos.y-rad, pos.z+rad);
 		enVerticies[3] = Vec3( pos.x+rad, pos.y+rad, pos.z+rad);
-	
-		enVerticies[4] = Vec3( pos.x-rad, pos.y+rad, pos.z-rad); 
-		enVerticies[5] = Vec3( pos.x-rad, pos.y-rad, pos.z-rad); 
-		enVerticies[6] = Vec3( pos.x+rad, pos.y-rad, pos.z-rad); 
-		enVerticies[7] = Vec3( pos.x+rad, pos.y+rad, pos.z-rad); 
+
+		enVerticies[4] = Vec3( pos.x-rad, pos.y+rad, pos.z-rad);
+		enVerticies[5] = Vec3( pos.x-rad, pos.y-rad, pos.z-rad);
+		enVerticies[6] = Vec3( pos.x+rad, pos.y-rad, pos.z-rad);
+		enVerticies[7] = Vec3( pos.x+rad, pos.y+rad, pos.z-rad);
+
+		enVerticies[8] = Vec3( pos.x-rad2, pos.y-rad, pos.z+rad2);
+		enVerticies[9] = Vec3( pos.x-rad2, pos.y-rad, pos.z-rad2);
+		enVerticies[10] = Vec3( pos.x+rad2, pos.y-rad, pos.z-rad2);
+		enVerticies[11] = Vec3( pos.x+rad2, pos.y-rad, pos.z+rad2);
 	}
 
 	// Triangles sequence
@@ -158,6 +164,14 @@ void Engine::loadScene() {
 		enTriIndex[33] = 3;
 		enTriIndex[34] = 6;
 		enTriIndex[35] = 7;
+
+		// Ground Plane
+		enTriIndex[36] = 8;
+		enTriIndex[37] = 9;
+		enTriIndex[38] = 10;
+		enTriIndex[39] = 10;
+		enTriIndex[40] = 11;
+		enTriIndex[41] = 8;
 	}
 }
 
@@ -181,7 +195,10 @@ void Engine::project() {
 		// (-1, 1)  -- x2 ->  (0, 2)  -- /2 ->  (0, 1)  -- xS ->  (0, S)
 		out.x = W * (1.f+out.x)/2.f;
 		out.y = H * (1.f-out.y)/2.f;
+
+		std::cout << out.x << ", " << out.y << ", " << out.z << "\n";
 	}
+	exit(1);
 }
 
 void Engine::rasterize() {
@@ -193,7 +210,6 @@ void Engine::rasterize() {
 		Vec3 &a = enSSVerticies[ enTriIndex[i]   ];
 		Vec3 &b = enSSVerticies[ enTriIndex[i+1] ];
 		Vec3 &c = enSSVerticies[ enTriIndex[i+2] ];
-		
 		enSurface.fillTris(a,b,c, COLOR_BLUE);
 		enSurface.drawTris(a,b,c, COLOR_WHITE, 1);
 	}
@@ -209,7 +225,7 @@ void Engine::render() {
 	enSurface.toU32Surface(enTextureBuffer);
 
 	// Copying data to VRAM
-	SDL_UpdateTexture(SDLTexture, NULL, enTextureBuffer, W*4);	
+	SDL_UpdateTexture(SDLTexture, NULL, enTextureBuffer, W*4);
 	if ( !SDLTexture ) {
 		SDL_Log("SDL_CreateTextureFromSurface failed: %s", SDL_GetError());
 		return;
@@ -285,7 +301,7 @@ void Engine::pipeline() {
 	}
 
 
-	TIME_PT tPtSave1, tPtSave2; 
+	TIME_PT tPtSave1, tPtSave2;
 	// Save the Surface
 	tPtSave1 = TIME_NOW();
 	enSurface.savePNG("Out/img.png");
@@ -293,7 +309,7 @@ void Engine::pipeline() {
 
 	uint64_t t_save_us   = TIME_DUR(tPtSave2, tPtSave1);
 	std::cout << "\nSave\t " << t_save_us / 1000.f << " ms\n\n";
-	
+
 
 	// Engine Class Destructor Code
 	this->engineDestroy();

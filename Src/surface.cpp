@@ -8,7 +8,7 @@
 #include "stb_image_write_clean.h"
 
 #include "surface.hpp"
-#include "utils.hpp" 
+#include "utils.hpp"
 
 
 #define ACES_a 0.0245786f
@@ -67,7 +67,7 @@ void Surface::_gamma() {
 // --------- Public Methods ---------
 void Surface::tonemap() {
     // this->_aces();  // ACES TMO
-    this->_reinhard();  // Reinhard TMO    
+    this->_reinhard();  // Reinhard TMO
     this->_gamma();
 }
 
@@ -100,7 +100,7 @@ int Surface::saveFloatBuffer(const char* file_path) {
 
     fwrite(_surfData, sizeof(float)*size, 1, file);
     fclose(file);
-    
+
     return 0;
 }
 
@@ -171,6 +171,11 @@ void Surface::fillNoise() {
 
 // _DRAW_LINE(int x0, int y0, int x1, int y1, const Color &color, int lineWidth);
 #define _DRAW_LINE(x0, y0, x1, y1, color, lineWidth) {      \
+    if (x0 < 0 || x0 >= surfWidth  ||                       \
+        x1 < 0 || x1 >= surfWidth  ||                       \
+        y0 < 0 || y0 >= surfHeight ||                       \
+        y1 < 0 || y1 >= surfHeight  ) return;               \
+                                                            \
     int startX = x0;                                        \
     int startY = y0;                                        \
     int endX = x1;                                          \
@@ -213,7 +218,7 @@ void Surface::fillNoise() {
         startY -= sx;                                       \
         endY -= sx;                                         \
     }                                                       \
-}
+}                                                           \
 
 void Surface::drawLine(int x0, int y0, int x1, int y1, const Color &color, int lineWidth) {
     _DRAW_LINE(x0,y0, x1,y1, color, lineWidth);
@@ -311,7 +316,7 @@ void Surface::fillCircle(int x0, int y0, int r, const Color &color) {
     _FILL_CIRCLE(x0, y0, r, color);
 }
 
-void Surface::fillCircle(const Vec3 &pos_vec, int r, const Color &color) {    
+void Surface::fillCircle(const Vec3 &pos_vec, int r, const Color &color) {
     const int &x0 = pos_vec.x;
     const int &y0 = pos_vec.y;
 
@@ -345,7 +350,7 @@ void Surface::drawRect(const Vec3 &pos_vec, const Vec3 &size_vec, const Color &c
     const int &x0 = pos_vec.x;
     const int &y0 = pos_vec.y;
     const int &w = size_vec.x;
-    const int &h = size_vec.x;
+    const int &h = size_vec.y;
 
     _DRAW_RECT(x0,y0, w,h, color, thickness);
 }

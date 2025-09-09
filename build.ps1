@@ -72,7 +72,7 @@ foreach ($file in $src_files) {
 		}
 
 		else {
-			modifyCondition = $true
+			$modifyCondition = $true
 		}
 
 		if (($modifyCondition -eq $true) -or ($buildAll -eq $true)) {
