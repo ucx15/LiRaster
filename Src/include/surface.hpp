@@ -15,7 +15,7 @@ class Surface {
 		int surfHeight;
 		int surfSize;
 		float surfAspectRatio;
-	
+
 	private:
 		Color *_surfData;
 
@@ -27,7 +27,7 @@ class Surface {
 
 		// tonemapping
 		void tonemap();
-		
+
 		// conversion
 		void toU32Surface(uint32_t* buffer);
 
@@ -36,11 +36,11 @@ class Surface {
 		int saveFloatBuffer(const char *file_path);
 		int savePPM(const char *file_path);
 		int savePNG(const char *file_path);
-		
+
 
 		// Drawing Methods
 		void setAt(int x, int y, const Color &color);
-		
+
 		void fill(const Color &color);
 		void fillNoise();
 
@@ -70,11 +70,11 @@ class Surface {
 
 		void drawTris(int x0, int y0, int x1, int y1, int x2, int y2, const Color &color, int thickness);
 		void drawTris(const Vec3 &v1,const Vec3 &v2, const Vec3 &v3, const Color &color, int thickness);
-		void drawTris(const Tris &tris, const Color &color, int thickness);
+		void drawTris(const Tris2D_i &tris, const Color &color, int thickness);
 
 		void fillTris(int x0, int y0, int x1, int y1, int x2, int y2, const Color &color);
 		void fillTris(const Vec3 &v1, const Vec3 &v2, const Vec3 &v3, const Color &color);
-		void fillTris(const Tris &tris, const Color &color);
+		void fillTris(const Tris2D_i &tris, const Color &color);
 
 
 	private:

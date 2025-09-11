@@ -26,9 +26,13 @@ class Engine {
 		int enVxCount;
 		int enTriCount;
 
-		Vec3 *enVerticies;
-		Vec3 *enSSVerticies;
-		int *enTriIndex;
+		Vec3 *enVerticies; 		// Holds the 3D verticies of the scene
+		Tris3D *enTrisBuffer; 	// Holds the triangles to be rasterized
+
+		Vec3 *enSSVerticies; 	// Holds the projected 2D verticies of the scene
+		Tris2D *enTrisProjectedBuffer; 	// Holds the triangles that are projected
+
+		int *enTriIndex; 	    // Holds the index buffer for the triangles
 
 		// Rendering Stuff
 		bool isRunning;
@@ -52,6 +56,7 @@ class Engine {
 
 		void loadScene();
 		void project();
+		void sortGeometry(); 	// in Descending order of depth
 		void render();
 		void rasterize();
 };

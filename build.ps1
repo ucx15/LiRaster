@@ -19,7 +19,7 @@ $buildAll = $false
 
 $out_file = "LiRaster.exe"
 
-$src_files = "main", "engine", "utils", "surface"
+$src_files = "main", "engine", "utils", "surface", "tris"
 
 $intermediate_dir = "Intermediate/"
 

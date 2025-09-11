@@ -427,7 +427,7 @@ void Surface::drawTris(const Vec3 &v1, const Vec3 &v2, const Vec3 &v3, const Col
     _DRAW_TRIS(x0,y0, x1,y1, x2,y2, color, thickness);
 }
 
-void Surface::drawTris(const Tris &tris, const Color &color, int thickness) {
+void Surface::drawTris(const Tris2D_i &tris, const Color &color, int thickness) {
     const int &x0 = tris.x0;
     const int &y0 = tris.y0;
     const int &x1 = tris.x1;
@@ -485,7 +485,7 @@ void Surface::fillTris(const Vec3 &v1, const Vec3 &v2, const Vec3 &v3, const Col
     _FILL_TRIS(x0,y0, x1,y1, x2,y2, color);
 }
 
-void Surface::fillTris(const Tris &tris, const Color &color) {
+void Surface::fillTris(const Tris2D_i &tris, const Color &color) {
     int x0 = tris.x0;
     int y0 = tris.y0;
     int x1 = tris.x1;

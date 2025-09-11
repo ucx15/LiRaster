@@ -90,6 +90,10 @@ void Engine::loadScene() {
 
 	MEM_ALLOC(enVerticies, Vec3, enVxCount);
 	MEM_ALLOC(enSSVerticies, Vec3, enVxCount);
+
+	MEM_ALLOC(enTrisBuffer, Tris3D, enTriCount);
+	MEM_ALLOC(enTrisProjectedBuffer, Tris2D, enTriCount);
+
 	MEM_ALLOC(enTriIndex, int, 3*enTriCount);
 
 	Vec3 pos = Vec3(0, 0, -1.f);
@@ -112,6 +116,35 @@ void Engine::loadScene() {
 		enVerticies[9] = Vec3( pos.x-rad2, pos.y-rad, pos.z-rad2);
 		enVerticies[10] = Vec3( pos.x+rad2, pos.y-rad, pos.z-rad2);
 		enVerticies[11] = Vec3( pos.x+rad2, pos.y-rad, pos.z+rad2);
+
+
+		// Ground Plane
+		enTrisBuffer[12] = Tris3D( enVerticies[8], enVerticies[9], enVerticies[10] );
+		enTrisBuffer[13] = Tris3D( enVerticies[10], enVerticies[11], enVerticies[8] );
+	}
+
+	// Triangle Setup
+	{
+		enTrisBuffer[0]  = Tris3D( enVerticies[7], enVerticies[6], enVerticies[5] );
+		enTrisBuffer[1]  = Tris3D( enVerticies[7], enVerticies[5], enVerticies[4] );
+
+		enTrisBuffer[2]  = Tris3D( enVerticies[0], enVerticies[1], enVerticies[2] );
+		enTrisBuffer[3]  = Tris3D( enVerticies[0], enVerticies[2], enVerticies[3] );
+
+		enTrisBuffer[4]  = Tris3D( enVerticies[4], enVerticies[0], enVerticies[3] );
+		enTrisBuffer[5]  = Tris3D( enVerticies[4], enVerticies[3], enVerticies[7] );
+
+		enTrisBuffer[6]  = Tris3D( enVerticies[1], enVerticies[5], enVerticies[6] );
+		enTrisBuffer[7]  = Tris3D( enVerticies[1], enVerticies[6], enVerticies[2] );
+
+		enTrisBuffer[8]  = Tris3D( enVerticies[4], enVerticies[5], enVerticies[1] );
+		enTrisBuffer[9]  = Tris3D( enVerticies[4], enVerticies[1], enVerticies[0] );
+
+		enTrisBuffer[10] = Tris3D( enVerticies[3], enVerticies[2], enVerticies[6] );
+		enTrisBuffer[11] = Tris3D( enVerticies[3], enVerticies[6], enVerticies[7] );
+
+		enTrisBuffer[12] = Tris3D( enVerticies[8], enVerticies[9], enVerticies[10] );
+		enTrisBuffer[13] = Tris3D( enVerticies[10], enVerticies[11], enVerticies[8] );
 	}
 
 	// Triangles sequence
@@ -176,48 +209,99 @@ void Engine::loadScene() {
 }
 
 
+// Sorting the geometry in Descending order of depth by Tris3D::getCenter().z
+void Engine::sortGeometry() {
+	std::sort(enTrisBuffer, enTrisBuffer + enTriCount, [](Tris3D &a, Tris3D &b) {
+		return a.getCenter().z < b.getCenter().z;
+	});
+}
+
 // Rendering Methods
+// void Engine::project() {
+// 	for (int i=0; i<enVxCount; i++) {
+// 		Vec3 &in = enVerticies[i];     // Input Vector
+// 		Vec3 &out = enSSVerticies[i];  // Output Vector
+
+// 		Vec4 intr = projMat * Vec4(in, 1.0f);
+
+//         // Normalize intr coordinates
+//         if (intr.w != 0) {
+//             out.x = intr.x/intr.w;
+//             out.y = intr.y/intr.w;
+//             out.z = intr.z/intr.w;
+//         }
+
+// 		// Normal Space to Screen Space conversion
+// 		// (-1, 1)  -- x2 ->  (0, 2)  -- /2 ->  (0, 1)  -- xS ->  (0, S)
+// 		out.x = W * (1.f+out.x)/2.f;
+// 		out.y = H * (1.f-out.y)/2.f;
+// 	}
+// }
+
 void Engine::project() {
-	for (int i=0; i<enVxCount; i++) {
-		Vec3 &in = enVerticies[i];     // Input Vector
-		Vec3 &out = enSSVerticies[i];  // Output Vector
+	for (int i=0; i<enTriCount; i++) {
+		Tris3D &t3d = enTrisBuffer[i];
 
-		Vec4 intr = projMat * Vec4(in, 1.0f);
+		Vec3 pts[3] = { t3d.v1, t3d.v2, t3d.v3 };
+		Vec2 ptsOut[3] = { Vec2(), Vec2(), Vec2() };
 
-        // Normalize intr coordinates
-        if (intr.w != 0) {
-            out.x = intr.x/intr.w;
-            out.y = intr.y/intr.w;
-            out.z = intr.z/intr.w;
-        }
+		for(int j=0; j<3; j++){
+			Vec3 &in = pts[j];     // Input Vector
+			Vec2 &out = ptsOut[j];  // Output Vector
 
-		// Normal Space to Screen Space conversion
-		// (-1, 1)  -- x2 ->  (0, 2)  -- /2 ->  (0, 1)  -- xS ->  (0, S)
-		out.x = W * (1.f+out.x)/2.f;
-		out.y = H * (1.f-out.y)/2.f;
+			Vec4 intr = projMat * Vec4(in, 1.0f);
 
-		std::cout << out.x << ", " << out.y << ", " << out.z << "\n";
+			// Normalize intr coordinates
+			if (intr.w != 0) {
+				out.x = intr.x/intr.w;
+				out.y = intr.y/intr.w;
+				// out.z = intr.z/intr.w;
+			}
+
+			// Normal Space to Screen Space conversion
+			// (-1, 1)  -- x2 ->  (0, 2)  -- /2 ->  (0, 1)  -- xS ->  (0, S)
+			out.x = W * (1.f+out.x)/2.f;
+			out.y = H * (1.f-out.y)/2.f;
+		}
+
+		enTrisProjectedBuffer[i] = Tris2D( ptsOut[0], ptsOut[1], ptsOut[2] );
 	}
-	exit(1);
 }
 
 void Engine::rasterize() {
 	// Rendering Triangles from ss_points buffer
 	enSurface.fill(COLOR_BLACK);
 
+	// // Drawing Triangles
+	// for (int i=0; i<enTriCount*3; i+=3) {
+	// 	Vec3 &a = enSSVerticies[ enTriIndex[i]   ];
+	// 	Vec3 &b = enSSVerticies[ enTriIndex[i+1] ];
+	// 	Vec3 &c = enSSVerticies[ enTriIndex[i+2] ];
+	// 	enSurface.fillTris(a,b,c, COLOR_BLUE);
+	// 	enSurface.drawTris(a,b,c, COLOR_WHITE, 1);
+	// }
+
 	// Drawing Triangles
-	for (int i=0; i<enTriCount*3; i+=3) {
-		Vec3 &a = enSSVerticies[ enTriIndex[i]   ];
-		Vec3 &b = enSSVerticies[ enTriIndex[i+1] ];
-		Vec3 &c = enSSVerticies[ enTriIndex[i+2] ];
-		enSurface.fillTris(a,b,c, COLOR_BLUE);
-		enSurface.drawTris(a,b,c, COLOR_WHITE, 1);
+	for (int i=0; i<enTriCount; i++) {
+		Tris2D &t = enTrisProjectedBuffer[i];
+		Vec2 &a = t.v1;
+		Vec2 &b = t.v2;
+		Vec2 &c = t.v3;
+
+		// enSurface.fillTris(a,b,c, COLOR_BLUE);
+		// enSurface.drawTris(a,b,c, COLOR_WHITE, 1);
+
+		Tris2D_i t_render(a.x, a.y, b.x, b.y, c.x, c.y);
+
+		enSurface.fillTris(t_render, COLOR_BLUE);
+		enSurface.drawTris(t_render, COLOR_WHITE, 1);
+
 	}
 
 	// Drawing Verticies
-	for (int i=0; i<enVxCount; i++) {
-		enSurface.fillCircle(enSSVerticies[i], 4, COLOR_RED);
-	}
+	// for (int i=0; i<enVxCount; i++) {
+	// 	enSurface.fillCircle(enSSVerticies[i], 4, COLOR_RED);
+	// }
 }
 
 void Engine::render() {
@@ -246,7 +330,28 @@ void Engine::pipeline() {
 	this->loadScene();
 
 
-	TIME_PT tPtProject1, tPtProject2, tPtRaster1, tPtRaster2;
+	TIME_PT tPtSortGeo1, tPtSortGeo2, tPtProject1, tPtProject2, tPtRaster1, tPtRaster2;
+
+	for (int i=0; i<enTriCount; i++) {
+		auto c = enTrisBuffer[i].getCenter();
+		std::cout << "Tri " << i << " Center : " << c.x << ", " << c.y << ", " << c.z << "\n";
+	}
+
+	// Sorting Geometry
+	tPtSortGeo1 = TIME_NOW();
+	this->sortGeometry();
+	tPtSortGeo2 = TIME_NOW();
+
+		for (int i=0; i<enTriCount; i++) {
+		auto c = enTrisBuffer[i].getCenter();
+		std::cout << "Tri " << i << " Center : " << c.x << ", " << c.y << ", " << c.z << "\n";
+	}
+
+
+	// Projection
+	tPtProject1 = TIME_NOW();
+	this->project();
+	tPtProject2 = TIME_NOW();
 
 	// Projection
 	tPtProject1 = TIME_NOW();
@@ -259,9 +364,10 @@ void Engine::pipeline() {
 	tPtRaster2 = TIME_NOW();
 
 	// Logging
+	auto tSortuS   = TIME_DUR(tPtSortGeo2, tPtSortGeo1);
 	auto tProjectuS = TIME_DUR(tPtProject2, tPtProject1);
 	auto tRasteruS  = TIME_DUR(tPtRaster2, tPtRaster1);
-	std::cout << "\nProject\t " << tProjectuS << " us\tRaster\t " << tRasteruS << " us\n";
+	std::cout << "\nSort\t " << tSortuS << " us\tProject\t " << tProjectuS << " us\tRaster\t " << tRasteruS << " us\n";
 
 
 	float lastLogTime = 0.f;
